@@ -1,0 +1,17 @@
+# Build output
+/app/build
+/shared/build
+/build
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.properties
+
+# Local config
+local.properties
+*.keystore
+*.jks
+
+# IDE
+.idea/
+*.iml
