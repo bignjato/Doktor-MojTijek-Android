@@ -12,7 +12,6 @@ env:
   ANDROID_COMPILE_SDK: '35'
   AGP_VERSION: '8.5.0'
   KOTLIN_VERSION: '2.0.21'
-  GRADLE_VERSION: '8.10.2'
 
 jobs:
   build:
@@ -22,33 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v2
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: 'gradle'
+          distribution: temurin
+          cache: gradle
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: gradle-${{ runner.os }}-v1-${{ hashFiles('**/*.gradle.kts', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
       - name: Create local.properties
-        run: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
@@ -60,58 +44,16 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
-      - name: Upload APK to GitHub Release
+      - name: Create GitHub Release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
+          set -e
           APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
-          APK_NAME=$(basename "$APK")
-          SHA256=$(sha256sum "$APK" | cut -d' ' -f1)
-
-          # Create a new release tag if it doesn't exist
-          TAG="android-$(date +%Y%m%d-%H%M%S)"
-          RELEASE_NOTES="## Android APK Build
-
-          **APK:** ${APK_NAME}
-          **SHA-256:** \`${SHA256}\`
-          **Built:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-          **Commit:** ${{ github.sha }}
-          **Workflow:** ${{ github.workflow }}
-
-          ## Download
-          Download the APK above and install on your Android device.
-          "
-
-          # Check if release exists
-          if gh release view "$TAG" --repo ${{ github.repository }} 2>/dev/null; then
-            echo "Release $TAG exists, uploading..."
-            gh release upload "$TAG" "$APK" --repo ${{ github.repository }} || true
-          else
-            echo "Creating release $TAG..."
-            gh release create "$TAG" \
-              --title "Android Build $(date +'%Y-%m-%d')" \
-              --notes "$RELEASE_NOTES" \
-              --repo ${{ github.repository }}
-            gh release upload "$TAG" "$APK" --repo ${{ github.repository }}
+          TAG="android-$(date +%Y%m%d)"
+          NOTES="Android APK build from ${{ github.sha }}"
+          if ! gh release view "$TAG" --repo ${{ github.repository }} 2>/dev/null; then
+            gh release create "$TAG" --title "Android Build $(date +'%Y-%m-%d')" --notes "$NOTES" --repo ${{ github.repository }}
           fi
+          gh release upload "$TAG" "$APK" --repo ${{ github.repository }} --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  sync-ios-shared:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    # Runs after build to sync shared module back to iOS if needed
-    steps:
-      - name: Checkout iOS repo shared module
-        uses: actions/checkout@v4
-        with:
-          repository: bignjato/Doktor-MojTijek
-          ref: ios-app
-          path: ios-source
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Compare shared modules
-        run: |
-          echo "iOS shared source available at: ios-source/kmp-android/shared"
-          echo "Android shared lives at: shared/"
-          echo "Sync direction: iOS kmp-android/shared → Android shared/"
-          echo "This keeps shared business logic in sync between platforms."
