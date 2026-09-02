@@ -10,6 +10,7 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    if: github.repository == 'bignjato/Doktor-MojTijek-Android'
     steps:
       - name: Checkout iOS repo
         uses: actions/checkout@v4
@@ -19,7 +20,7 @@ jobs:
           path: ios-source
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create PR or push to Android main
+      - name: Create sync PR
         run: |
           IOS_SHARED="ios-source/kmp-android/shared"
           if [ ! -d "$IOS_SHARED" ]; then
@@ -27,16 +28,11 @@ jobs:
             exit 0
           fi
 
-          echo "iOS shared module content:"
-          find "$IOS_SHARED" -type f | head -20
-
-          # Fork detection: try to create a branch and PR
           git clone https://github.com/bignjato/Doktor-MojTijek-Android.git android-target
           cd android-target
 
           SYNC_BRANCH="sync/ios-shared-$(date +%Y%m%d-%H%M%S)"
 
-          # Copy shared files (but don't overwrite build.gradle.kts — Android has its own)
           rsync -av --exclude='build.gradle.kts' \
             "$IOS_SHARED/" \
             "shared/src/main/kotlin/com/mojtijek/shared/"
@@ -48,11 +44,10 @@ jobs:
           git commit -m "sync: update shared from iOS ios-app $(date -u)"
           git push origin "$SYNC_BRANCH" -f
 
-          # Create PR
           gh pr create \
             --title "sync: shared module from iOS ios-app" \
-            --body "Automated sync of shared business logic from iOS \`ios-app\` branch." \
+            --body "Automated sync of shared business logic from iOS ios-app branch." \
             --base main \
             --head "bignjato:${SYNC_BRANCH}"
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN_FOR_PRS }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
