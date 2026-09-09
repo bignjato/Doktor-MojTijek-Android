@@ -73,6 +73,7 @@ private fun MjerenjeCard(m: MjerenjeEntity, onDelete: (MjerenjeEntity) -> Unit) 
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun NovoMjerenjeDialog(clanId: String, onDismiss: () -> Unit, onSpremi: (MjerenjeEntity) -> Unit) {
     var tip by remember { mutableStateOf(TIPOVI.first()) }
