@@ -2,11 +2,7 @@ package com.mojtijek.doktor.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Medication
-import androidx.compose.material.icons.filled.MonitorHeart
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,20 +13,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mojtijek.doktor.ui.home.HomeScreen
-import com.mojtijek.doktor.ui.kalendar.KalendarScreen
+import com.mojtijek.doktor.ui.izvjestaji.IzvjestajiScreen
 import com.mojtijek.doktor.ui.pracenje.PracenjeScreen
 import com.mojtijek.doktor.ui.profil.ProfilScreen
 import com.mojtijek.doktor.ui.terapije.TerapijeScreen
 
 private sealed class Tab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    object MojDan : Tab("moj_dan", "Moj dan", Icons.Filled.Home)
-    object Terapije : Tab("terapije", "Terapije", Icons.Filled.Medication)
-    object Kalendar : Tab("kalendar", "Pregledi", Icons.Filled.CalendarMonth)
+    object Pocetna : Tab("pocetna", "Početna", Icons.Filled.Home)
     object Pracenje : Tab("pracenje", "Praćenje", Icons.Filled.MonitorHeart)
-    object Profil : Tab("profil", "Obitelj", Icons.Filled.Person)
+    object Terapije : Tab("terapije", "Terapije", Icons.Filled.Medication)
+    object Izvjestaji : Tab("izvjestaji", "Izvještaji", Icons.Filled.Assessment)
+    object Profil : Tab("profil", "Profil", Icons.Filled.Person)
 }
 
-private val tabs = listOf(Tab.MojDan, Tab.Terapije, Tab.Kalendar, Tab.Pracenje, Tab.Profil)
+private val tabs = listOf(Tab.Pocetna, Tab.Pracenje, Tab.Terapije, Tab.Izvjestaji, Tab.Profil)
 
 @Composable
 fun MojTijekApp(vm: MojTijekViewModel) {
@@ -60,13 +56,13 @@ fun MojTijekApp(vm: MojTijekViewModel) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Tab.MojDan.route,
+            startDestination = Tab.Pocetna.route,
             modifier = androidx.compose.ui.Modifier.padding(padding)
         ) {
-            composable(Tab.MojDan.route) { HomeScreen(vm) }
-            composable(Tab.Terapije.route) { TerapijeScreen(vm) }
-            composable(Tab.Kalendar.route) { KalendarScreen(vm) }
+            composable(Tab.Pocetna.route) { HomeScreen(vm) }
             composable(Tab.Pracenje.route) { PracenjeScreen(vm) }
+            composable(Tab.Terapije.route) { TerapijeScreen(vm) }
+            composable(Tab.Izvjestaji.route) { IzvjestajiScreen(vm) }
             composable(Tab.Profil.route) { ProfilScreen(vm) }
         }
     }

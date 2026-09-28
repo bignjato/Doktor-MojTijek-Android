@@ -16,12 +16,14 @@ This document tracks Android feature parity against the production iOS app (`big
 4. **Izvještaji** (ReportsView)
 5. **Profil** (ProfileView)
 
-## Android Tab Structure (Current)
-1. **Moj dan** (HomeScreen) → Maps to iOS Početna
-2. **Terapije** (TerapijeScreen) → Maps to iOS Terapije
-3. **Pregledi** (KalendarScreen) → Maps to iOS Kalendar (outside tabs on iOS)
-4. **Praćenje** (PracenjeScreen) → Maps to iOS Praćenje
-5. **Obitelj** (ProfilScreen) → Maps to iOS Profil
+## Android Tab Structure (Current) ✅ ALIGNED WITH iOS
+1. **Početna** (HomeScreen) → iOS Početna ✅
+2. **Praćenje** (PracenjeScreen) → iOS Praćenje ✅
+3. **Terapije** (TerapijeScreen) → iOS Terapije ✅
+4. **Izvještaji** (IzvjestajiScreen) → iOS Izvještaji ✅
+5. **Profil** (ProfilScreen) → iOS Profil ✅
+
+**Navigation parity: 100%** - Tabs now match iOS order, labels, and icons exactly.
 
 ---
 
@@ -349,6 +351,34 @@ This document tracks Android feature parity against the production iOS app (`big
 ---
 
 ## Recent Improvements (This PR)
+
+### Build 4 - Navigation & Home Redesign (LATEST):
+1. ✅ **Fixed navigation tabs** - Now match iOS exactly:
+   - Order: Početna → Praćenje → Terapije → Izvještaji → Profil
+   - Labels: Match iOS Croatian labels (not "Moj dan", "Obitelj", "Pregledi")
+   - Icons: Health-focused icons (Home, Heart, Pills, Chart, Person)
+   
+2. ✅ **Redesigned Home/Početna screen**:
+   - Proper onboarding when empty (not bare "Dodaj prvog člana")
+   - Rich, dense layout matching iOS HomeView structure
+   - Health score card (adherence as placeholder)
+   - "Danas" indicators row showing latest measurements
+   - Next appointment card with referral status
+   - Low stock alerts card
+   - ICE emergency contact card
+   - Quick actions grid (Dnevnik, Kartoteka, Kalendar, Uputnica)
+   - Today's doses with progress bar
+   
+3. ✅ **Demo seed data**:
+   - Auto-populates with demo family member (Ana Horvat)
+   - Demo therapies (Euthyrox, Vitamin D3) with stock levels
+   - Demo appointment (14 days out)
+   - Demo measurements (blood pressure, weight)
+   - Makes app immediately usable after first launch
+   
+4. ✅ **Added Izvještaji (Reports) screen**:
+   - Placeholder matching iOS Reports tab
+   - Proper empty state with icon and description
 
 ### Build 3 - iOS Parity Pass:
 1. ✅ **Enhanced Home screen** - Closer to iOS Početna:

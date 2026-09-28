@@ -36,6 +36,99 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
         repo.upsertClan(clan)
         _aktivniClanId.value = clan.id
     }
+    
+    fun dodajSeedData() = viewModelScope.launch {
+        // Demo family member
+        val ana = ClanEntity(
+            ime = "Ana Horvat",
+            datumRodjenja = System.currentTimeMillis() - (35L * 365 * 24 * 60 * 60 * 1000),
+            spol = "žensko",
+            krvnaGrupa = "A+",
+            visina = 168.0,
+            oib = "12345678901",
+            mbo = "123456789",
+            lijecnik = "Dr. Marko Kovač",
+            lijecnikEmail = "marko.kovac@example.hr",
+            alergije = "Polen, penicilin",
+            hitniKontakt = "Ivan Horvat (suprug)",
+            hitniTelefon = "+385 98 123 4567",
+            boja = "#E91E63",
+            redoslijed = 0,
+            aktivan = true
+        )
+        repo.upsertClan(ana)
+        _aktivniClanId.value = ana.id
+        
+        // Demo therapies
+        val terapija1 = TerapijaEntity(
+            clanId = ana.id,
+            naziv = "Euthyrox",
+            jacina = "100mcg",
+            oblik = "tableta",
+            dozaKom = 1.0,
+            putaDnevno = 1,
+            vremena = "07:00",
+            komPoKutiji = 100.0,
+            kolicina = 45.0,
+            pragDana = 7,
+            trajni = true,
+            aktivna = true,
+            razlog = "Hipotireoza",
+            receptDo = System.currentTimeMillis() + (60L * 24 * 60 * 60 * 1000)
+        )
+        repo.upsertTerapija(terapija1)
+        
+        val terapija2 = TerapijaEntity(
+            clanId = ana.id,
+            naziv = "Vitamin D3",
+            jacina = "2000 IU",
+            oblik = "tableta",
+            dozaKom = 1.0,
+            putaDnevno = 1,
+            vremena = "08:00",
+            komPoKutiji = 60.0,
+            kolicina = 18.0,
+            pragDana = 7,
+            trajni = true,
+            aktivna = true,
+            razlog = "Nedostatak vitamina D"
+        )
+        repo.upsertTerapija(terapija2)
+        
+        // Demo appointment
+        val pregled = DogadjajEntity(
+            clanId = ana.id,
+            vrsta = "pregled",
+            naslov = "Kontrola kod endokrinologa",
+            datum = System.currentTimeMillis() + (14L * 24 * 60 * 60 * 1000),
+            vrijeme = "10:30",
+            lokacija = "Poliklinika Medico, Zagreb",
+            uputnicaPotrebna = true,
+            uputnicaIzdana = true,
+            status = "planirano"
+        )
+        repo.upsertDogadjaj(pregled)
+        
+        // Demo measurements
+        val tlak = MjerenjeEntity(
+            clanId = ana.id,
+            tip = "tlak",
+            vrijednost = 125.0,
+            vrijednost2 = 82.0,
+            jedinica = "mmHg",
+            ts = System.currentTimeMillis() - (2L * 60 * 60 * 1000)
+        )
+        repo.upsertMjerenje(tlak)
+        
+        val tezina = MjerenjeEntity(
+            clanId = ana.id,
+            tip = "težina",
+            vrijednost = 68.5,
+            jedinica = "kg",
+            ts = System.currentTimeMillis() - (1L * 24 * 60 * 60 * 1000)
+        )
+        repo.upsertMjerenje(tezina)
+    }
 
     fun azurirajClana(clan: ClanEntity) = viewModelScope.launch { repo.upsertClan(clan) }
 
