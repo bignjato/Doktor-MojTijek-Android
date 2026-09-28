@@ -19,6 +19,16 @@ fun ProfilScreen(vm: MojTijekViewModel) {
     val clanovi by vm.clanovi.collectAsState()
     val aktivniId by vm.aktivniClanId.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
+    var odabraniClanId by remember { mutableStateOf<String?>(null) }
+
+    if (odabraniClanId != null) {
+        ClanDetaljiScreen(
+            vm = vm,
+            clanId = odabraniClanId!!,
+            onNavigateBack = { odabraniClanId = null }
+        )
+        return
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -35,7 +45,12 @@ fun ProfilScreen(vm: MojTijekViewModel) {
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(clanovi) { c ->
-                        ClanCard(c, odabran = c.id == aktivniId, onOdaberi = { vm.odaberiClana(c.id) })
+                        ClanCard(
+                            c,
+                            odabran = c.id == aktivniId,
+                            onOdaberi = { vm.odaberiClana(c.id) },
+                            onPrikaziDetalje = { odabraniClanId = c.id }
+                        )
                     }
                 }
             }
@@ -50,8 +65,8 @@ fun ProfilScreen(vm: MojTijekViewModel) {
 }
 
 @Composable
-private fun ClanCard(clan: ClanEntity, odabran: Boolean, onOdaberi: () -> Unit) {
-    Card(onClick = onOdaberi) {
+private fun ClanCard(clan: ClanEntity, odabran: Boolean, onOdaberi: () -> Unit, onPrikaziDetalje: () -> Unit) {
+    Card(onClick = onPrikaziDetalje) {
         Row(Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Icon(Icons.Filled.Person, contentDescription = null)
             Spacer(Modifier.width(12.dp))
@@ -61,7 +76,11 @@ private fun ClanCard(clan: ClanEntity, odabran: Boolean, onOdaberi: () -> Unit) 
                     Text("Liječnik: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            if (odabran) AssistChip(onClick = {}, label = { Text("Aktivan") })
+            if (odabran) {
+                AssistChip(onClick = {}, label = { Text("Aktivan") })
+            } else {
+                TextButton(onClick = onOdaberi) { Text("Postavi aktivnim") }
+            }
         }
     }
 }

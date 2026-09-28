@@ -84,6 +84,9 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.dokumentiZaClana(id) }
     fun dodajDokument(d: DokumentEntity) = viewModelScope.launch { repo.upsertDokument(d) }
 
+    fun labZaAktivnog(): Flow<List<LabNalazEntity>> =
+        aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.labZaClana(id) }
+
     fun mjerenjaZaAktivnog(): Flow<List<MjerenjeEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.mjerenjaZaClana(id) }
     fun dodajMjerenje(m: MjerenjeEntity) = viewModelScope.launch { repo.upsertMjerenje(m) }
