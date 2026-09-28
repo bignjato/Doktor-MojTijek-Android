@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.mojtijek.doktor.data.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
 
     val clanovi: StateFlow<List<ClanEntity>> = repo.clanovi

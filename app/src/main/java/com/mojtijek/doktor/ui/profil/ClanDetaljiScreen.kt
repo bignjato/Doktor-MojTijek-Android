@@ -87,6 +87,14 @@ fun ClanDetaljiScreen(
 private fun OsnovniPodaciTab(clan: ClanEntity, vm: MojTijekViewModel) {
     var showEditDialog by remember { mutableStateOf(false) }
 
+    if (showEditDialog) {
+        UrediClanaDialog(
+            clan = clan,
+            onDismiss = { showEditDialog = false },
+            onSpremi = { vm.azurirajClana(it); showEditDialog = false }
+        )
+    }
+
     LazyColumn(
         Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -537,6 +545,92 @@ private fun NoviDnevnikDialog(
                             tekst = tekst.ifBlank { null },
                             raspolozenje = raspolozenje,
                             datum = System.currentTimeMillis()
+                        )
+                    )
+                }
+            }) { Text("Spremi") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Odustani") } }
+    )
+}
+
+@Composable
+private fun UrediClanaDialog(
+    clan: ClanEntity,
+    onDismiss: () -> Unit,
+    onSpremi: (ClanEntity) -> Unit
+) {
+    var ime by remember { mutableStateOf(clan.ime) }
+    var oib by remember { mutableStateOf(clan.oib ?: "") }
+    var spol by remember { mutableStateOf(clan.spol ?: "muško") }
+    var krvnaGrupa by remember { mutableStateOf(clan.krvnaGrupa ?: "") }
+    var alergije by remember { mutableStateOf(clan.alergije ?: "") }
+    var kronicneBolesti by remember { mutableStateOf(clan.kronicneBolesti ?: "") }
+    var lijecnik by remember { mutableStateOf(clan.lijecnik ?: "") }
+    var lijecnikEmail by remember { mutableStateOf(clan.lijecnikEmail ?: "") }
+    var mbo by remember { mutableStateOf(clan.mbo ?: "") }
+    var hitniKontakt by remember { mutableStateOf(clan.hitniKontakt ?: "") }
+    var hitniTelefon by remember { mutableStateOf(clan.hitniTelefon ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Uredi člana obitelji") },
+        text = {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
+                    OutlinedTextField(ime, { ime = it }, label = { Text("Ime") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(oib, { oib = it }, label = { Text("OIB") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(selected = spol == "muško", onClick = { spol = "muško" }, label = { Text("Muško") })
+                        FilterChip(selected = spol == "žensko", onClick = { spol = "žensko" }, label = { Text("Žensko") })
+                    }
+                }
+                item {
+                    OutlinedTextField(krvnaGrupa, { krvnaGrupa = it }, label = { Text("Krvna grupa (npr. A+)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(alergije, { alergije = it }, label = { Text("Alergije") }, maxLines = 2, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(kronicneBolesti, { kronicneBolesti = it }, label = { Text("Kronične bolesti") }, maxLines = 2, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(lijecnik, { lijecnik = it }, label = { Text("Liječnik") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(lijecnikEmail, { lijecnikEmail = it }, label = { Text("Email liječnika") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(mbo, { mbo = it }, label = { Text("MBO") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(hitniKontakt, { hitniKontakt = it }, label = { Text("Hitni kontakt") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                item {
+                    OutlinedTextField(hitniTelefon, { hitniTelefon = it }, label = { Text("Hitni telefon") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (ime.isNotBlank()) {
+                    onSpremi(
+                        clan.copy(
+                            ime = ime,
+                            oib = oib.ifBlank { null },
+                            spol = spol.ifBlank { null },
+                            krvnaGrupa = krvnaGrupa.ifBlank { null },
+                            alergije = alergije.ifBlank { null },
+                            kronicneBolesti = kronicneBolesti.ifBlank { null },
+                            lijecnik = lijecnik.ifBlank { null },
+                            lijecnikEmail = lijecnikEmail.ifBlank { null },
+                            mbo = mbo.ifBlank { null },
+                            hitniKontakt = hitniKontakt.ifBlank { null },
+                            hitniTelefon = hitniTelefon.ifBlank { null }
                         )
                     )
                 }

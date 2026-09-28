@@ -55,7 +55,32 @@ fun TerapijeScreen(vm: MojTijekViewModel) {
 
 @Composable
 private fun TerapijaCard(t: TerapijaEntity, onToggle: (TerapijaEntity) -> Unit, onDelete: (TerapijaEntity) -> Unit) {
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val dana = DoseSchedule.danaPreostalo(t)
+    
+    if (showEditDialog) {
+        UrediTerapijuDialog(
+            terapija = t,
+            onDismiss = { showEditDialog = false },
+            onSpremi = { onToggle(it); showEditDialog = false }
+        )
+    }
+    
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Obriši terapiju?") },
+            text = { Text("Jeste li sigurni da želite obrisati terapiju \"${t.naziv}\"? Ova radnja je nepovratna.") },
+            confirmButton = {
+                TextButton(onClick = { onDelete(t); showDeleteDialog = false }) {
+                    Text("Obriši", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Odustani") } }
+        )
+    }
+    
     Card {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -79,7 +104,10 @@ private fun TerapijaCard(t: TerapijaEntity, onToggle: (TerapijaEntity) -> Unit, 
                 Text(it, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.height(4.dp))
-            TextButton(onClick = { onDelete(t) }) { Text("Obriši") }
+            Row {
+                TextButton(onClick = { showEditDialog = true }) { Text("Uredi") }
+                TextButton(onClick = { showDeleteDialog = true }) { Text("Obriši") }
+            }
         }
     }
 }
@@ -120,6 +148,51 @@ private fun NovaTerapijaDialog(clanId: String, onDismiss: () -> Unit, onSpremi: 
                             dozaKom = dozaKom.toDoubleOrNull() ?: 1.0,
                             komPoKutiji = komPoKutiji.toDoubleOrNull() ?: 30.0,
                             kolicina = kolicina.toDoubleOrNull() ?: 0.0
+                        )
+                    )
+                }
+            }) { Text("Spremi") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Odustani") } }
+    )
+}
+
+@Composable
+private fun UrediTerapijuDialog(terapija: TerapijaEntity, onDismiss: () -> Unit, onSpremi: (TerapijaEntity) -> Unit) {
+    var naziv by remember { mutableStateOf(terapija.naziv) }
+    var jacina by remember { mutableStateOf(terapija.jacina ?: "") }
+    var oblik by remember { mutableStateOf(terapija.oblik) }
+    var vremena by remember { mutableStateOf(terapija.vremena) }
+    var dozaKom by remember { mutableStateOf(terapija.dozaKom.toString()) }
+    var kolicina by remember { mutableStateOf(terapija.kolicina.toString()) }
+    var napomena by remember { mutableStateOf(terapija.napomena ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Uredi terapiju") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(naziv, { naziv = it }, label = { Text("Naziv lijeka") }, singleLine = true)
+                OutlinedTextField(jacina, { jacina = it }, label = { Text("Jačina (npr. 500mg)") }, singleLine = true)
+                OutlinedTextField(oblik, { oblik = it }, label = { Text("Oblik (tableta, sirup...)") }, singleLine = true)
+                OutlinedTextField(vremena, { vremena = it }, label = { Text("Vremena (08:00,20:00)") }, singleLine = true)
+                OutlinedTextField(dozaKom, { dozaKom = it }, label = { Text("Doza po uzimanju") }, singleLine = true)
+                OutlinedTextField(kolicina, { kolicina = it }, label = { Text("Trenutna zaliha (kom)") }, singleLine = true)
+                OutlinedTextField(napomena, { napomena = it }, label = { Text("Napomena") }, maxLines = 3)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (naziv.isNotBlank()) {
+                    onSpremi(
+                        terapija.copy(
+                            naziv = naziv,
+                            jacina = jacina.ifBlank { null },
+                            oblik = oblik,
+                            vremena = vremena,
+                            dozaKom = dozaKom.toDoubleOrNull() ?: terapija.dozaKom,
+                            kolicina = kolicina.toDoubleOrNull() ?: terapija.kolicina,
+                            napomena = napomena.ifBlank { null }
                         )
                     )
                 }

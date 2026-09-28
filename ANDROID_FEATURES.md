@@ -1,9 +1,11 @@
 # Android MojTijek - Feature Implementation Status
 
 ## Overview
-This document tracks the feature implementation status of the Android MojTijek app, documenting what has been implemented and what features may exist in the iOS app that are not yet available on Android.
+This document tracks the feature implementation status of the Android MojTijek app relative to the iOS production app.
 
-**Last Updated:** September 28, 2026
+**Last Updated:** September 28, 2026  
+**iOS Reference:** `https://github.com/bignjato/Doktor-MojTijek` branch `ios-app` - **NOT ACCESSIBLE**  
+**Status:** iOS repository returns 404 Not Found from GitHub API despite being referenced in CI workflows
 
 ## Implemented Features ✅
 
@@ -114,10 +116,38 @@ This document tracks the feature implementation status of the Android MojTijek a
   - Entity exists in database
   - UI not yet implemented (can be added to gynecological section)
 
+## Recent Improvements (This PR)
+
+### Build Configuration ✅
+- ✅ Added `targetSdk = 35` to silence Android SDK warnings
+- ✅ Added `android.suppressUnsupportedCompileSdk=35` to gradle.properties
+- ✅ Fixed `@OptIn(ExperimentalCoroutinesApi::class)` warnings in ViewModel
+
+### Edit Functionality ✅
+- ✅ **NEW:** Edit family member details (name, OIB, gender, blood type, allergies, chronic conditions, doctor info, emergency contacts)
+- ✅ **NEW:** Edit therapy details (name, strength, form, schedule, dosage, stock, notes)
+- ✅ Delete confirmation dialogs for therapies (prevents accidental deletion)
+
+### UX Polish ✅
+- ✅ Improved therapy card with separate Edit and Delete buttons
+- ✅ Confirmation dialogs for destructive actions
+- ✅ Comprehensive edit dialogs with all relevant fields
+
 ## Missing Features (Possible iOS Parity Gaps)
 
+### iOS Repository Access Issue
+**Critical:** The iOS repository at `https://github.com/bignjato/Doktor-MojTijek` (branch `ios-app`) returns 404 Not Found from GitHub API. Without access to the iOS codebase, accurate feature comparison is impossible.
+
+**Attempted access methods:**
+- `gh repo clone bignjato/Doktor-MojTijek` → Repository not found
+- `git clone https://github.com/bignjato/Doktor-MojTijek.git` → Repository not found  
+- `gh api /repos/bignjato/Doktor-MojTijek` → HTTP 404
+- `gh repo list bignjato` → Repository not in list
+
+**Implication:** The following feature gap analysis is based on common medical app patterns, not actual iOS code comparison.
+
 ### Unknown iOS Features (Cannot Verify Without Access)
-Since the iOS repository at `https://github.com/bignjato/Doktor-MojTijek` (branch `ios-app`) is not accessible, the following are reasonable assumptions about features that may exist in a production iOS medical app:
+The following are reasonable assumptions about features that may exist in a production iOS medical app:
 
 #### Potentially Missing:
 1. **Push notifications** - Medication reminders, appointment alerts
@@ -141,22 +171,26 @@ Since the iOS repository at `https://github.com/bignjato/Doktor-MojTijek` (branc
 - **No onboarding flow** - First-time user guidance
 - **No data import/export** - No way to backup or transfer data
 - **No search functionality** - Can't search medications, documents, etc.
-- **Limited edit capabilities** - Can't edit existing family members, therapies, etc. (only add/delete)
+- ~~**Limited edit capabilities**~~ - ✅ **FIXED:** Can now edit family members and therapies
 - **No dose history view** - Can't see past dose adherence or patterns
 - **No medication interaction warnings** - No checking for drug interactions
+- **No edit for appointments** - Can only add/delete appointments, not edit
+- **No edit for measurements** - Can only add/delete measurements, not edit
+- **No edit for documents/vaccinations** - Can only add, not edit
 
 ## Technical Debt & Improvements Needed
 
 ### Code Quality
-- ⚠️ Add `@OptIn(ExperimentalCoroutinesApi::class)` to ViewModel to suppress warnings
-- ⚠️ Deprecated `Modifier.menuAnchor()` in PracenjeScreen
+- ✅ ~~Add `@OptIn(ExperimentalCoroutinesApi::class)` to ViewModel~~ **FIXED**
+- ⚠️ Deprecated `Modifier.menuAnchor()` in PracenjeScreen (minor warning, not critical)
 - ⚠️ No error handling for database operations
 - ⚠️ No loading states for async operations
-- ⚠️ No input validation beyond empty checks
+- ⚠️ No input validation beyond empty checks (allows invalid data entry)
 
 ### UX Improvements
-- 📝 Add edit dialogs for existing entities (currently can only add new or delete)
-- 📝 Add confirmation dialogs for delete operations
+- ✅ ~~Add edit dialogs for existing entities~~ **FIXED for family members and therapies**
+- ✅ ~~Add confirmation dialogs for delete operations~~ **FIXED for therapies**
+- 📝 Add confirmation dialogs for other delete operations (appointments, measurements, etc.)
 - 📝 Add undo functionality for delete operations
 - 📝 Add search/filter capabilities to long lists
 - 📝 Add sorting options (by name, date, etc.)
@@ -191,16 +225,17 @@ app/build/outputs/apk/debug/app-debug.apk
 
 To achieve full parity with the iOS app, the following steps are recommended:
 
-1. **Access iOS repository** - Gain read access to compare features directly
-2. **Implement edit functionality** - Allow editing of family members, therapies, etc.
-3. **Add menstruation tracking UI** - Complete the MenstruacijaEntity integration
-4. **Implement notifications** - Medication and appointment reminders
-5. **Add data export** - PDF generation, CSV export
-6. **Improve navigation** - Proper Navigation Compose setup
-7. **Add settings screen** - App configuration and about information
-8. **Implement search** - Global search across all entities
-9. **Add charts and analytics** - Visualize health data trends
-10. **Implement photo attachments** - For documents and diary entries
+1. **CRITICAL: Access iOS repository** - The iOS repo must be made accessible to this account for accurate feature comparison
+2. ✅ ~~**Implement edit functionality**~~ - **DONE for family members and therapies**
+3. **Complete edit functionality** - Add edit dialogs for appointments, measurements, documents, vaccinations
+4. **Add menstruation tracking UI** - Complete the MenstruacijaEntity integration
+5. **Implement notifications** - Medication and appointment reminders
+6. **Add data export** - PDF generation, CSV export
+7. **Improve navigation** - Proper Navigation Compose setup
+8. **Add settings screen** - App configuration and about information
+9. **Implement search** - Global search across all entities
+10. **Add charts and analytics** - Visualize health data trends
+11. **Implement photo attachments** - For documents and diary entries
 
 ## Croatian Localization (hr)
 
