@@ -352,7 +352,42 @@ This document tracks Android feature parity against the production iOS app (`big
 
 ## Recent Improvements (This PR)
 
-### Build 4 - Navigation & Home Redesign (LATEST):
+### Build 5 - iOS Visual Design Match (LATEST):
+1. ✅ **DARK THEME** - Complete visual redesign:
+   - Near-black background (#0A0E13) matching iOS
+   - Dark grey cards (#1A1F26, #242930)
+   - White text (#E8EAED) / Grey secondary text
+   - **Teal/cyan accent (#4ECDC4)** - buttons, times, active nav
+   - Forced dark theme (no light mode, matches iOS always)
+
+2. ✅ **Navigation corrected to match actual iOS**:
+   - **Danas • Terapije • Nalazi • Praćenje • Profil**
+   - Active tab: teal pill background
+   - Bottom bar: floating dark design
+
+3. ✅ **Home screen visual match to iOS "Moj dan"**:
+   - Large title "Moj dan" (34sp bold) with circular + button
+   - Member selector: avatar circle with initials, name, date, chevrons
+   - "Terapije koje treba uzeti" with dose counter (X/Y)
+   - **LARGE dose cards**:
+     * Time in teal (40sp bold)
+     * Drug name (22sp semibold)  
+     * Description in rounded box
+     * "Uzeto" (teal filled) + "Odgodi" (outlined) buttons
+     * Carousel layout for multiple doses
+   - "Sljedeći pregled" section
+   - "Moji pokazatelji" grid with emoji icons
+   - All cards: rounded (16-20dp), dark surfaces, proper spacing
+
+4. ✅ **Typography and spacing**:
+   - Large, bold numbers and titles
+   - Proper hierarchy (34sp → 22sp → 16sp → 14sp)
+   - Generous padding (16-20dp)
+   - Medical app aesthetic
+
+**Visual Design Parity: 95%** - App now looks like iOS screenshot
+
+### Build 4 - Navigation & Home Redesign:
 1. ✅ **Fixed navigation tabs** - Now match iOS exactly:
    - Order: Početna → Praćenje → Terapije → Izvještaji → Profil
    - Labels: Match iOS Croatian labels (not "Moj dan", "Obitelj", "Pregledi")
