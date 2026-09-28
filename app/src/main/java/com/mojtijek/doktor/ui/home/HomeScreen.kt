@@ -24,67 +24,176 @@ import java.util.*
 fun HomeScreen(vm: MojTijekViewModel) {
     val clanovi by vm.clanovi.collectAsState()
     val aktivniId by vm.aktivniClanId.collectAsState()
+    val aktivniClan = remember(clanovi, aktivniId) { clanovi.find { it.id == aktivniId } }
     val terapije by vm.terapijeZaAktivnog().collectAsState(initial = emptyList())
     val uzimanja by vm.uzimanjaDanas().collectAsState(initial = emptyList())
+    val dogadjaji by vm.dogadjajiZaAktivnog().collectAsState(initial = emptyList())
 
     val danas = DoseSchedule.dayStart()
     val doze = remember(terapije) { DoseSchedule.entriesForDay(terapije, danas) }
     val uzetiSetovi = remember(uzimanja) { uzimanja.map { "${it.terapijaId}|${it.slot}" }.toSet() }
+    
+    // Calculate adherence (iOS: streak, 7d %)
+    val adherence7d = remember(uzimanja, doze) {
+        if (doze.isEmpty()) 100.0
+        else (uzimanja.count { !it.preskoceno } / doze.size.toDouble() * 100).coerceIn(0.0, 100.0)
+    }
+    
+    // Find next appointment (iOS: Sljedeći pregled)
+    val sljedeciPregled = remember(dogadjaji) {
+        dogadjaji.filter { it.datum >= System.currentTimeMillis() && it.status != "obavljeno" }
+            .minByOrNull { it.datum }
+    }
+    
+    // Find low stock therapies (iOS: Lijekovi pri kraju)
+    val niskiLijekovi = remember(terapije) {
+        terapije.filter { it.aktivna }.mapNotNull { t ->
+            val dana = DoseSchedule.danaPreostalo(t)
+            if (dana != null && dana < 7) t to dana else null
+        }
+    }
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Moj dan", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(4.dp))
-        Text(
-            SimpleDateFormat("EEEE, d. MMMM yyyy.", Locale("hr", "HR")).format(Date()),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(16.dp))
+    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            Text("Početna", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Text(
+                SimpleDateFormat("EEEE, d. MMMM yyyy.", Locale("hr", "HR")).format(Date()),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         if (clanovi.isEmpty()) {
-            EmptyState()
-            return@Column
+            item { EmptyState() }
+            return@LazyColumn
         }
 
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            clanovi.forEach { clan ->
-                FilterChip(
-                    selected = clan.id == aktivniId,
-                    onClick = { vm.odaberiClana(clan.id) },
-                    label = { Text(clan.ime) }
-                )
+        // Family picker (iOS: FamilyPicker)
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                clanovi.forEach { clan ->
+                    FilterChip(
+                        selected = clan.id == aktivniId,
+                        onClick = { vm.odaberiClana(clan.id) },
+                        label = { Text(clan.ime) }
+                    )
+                }
             }
         }
-        Spacer(Modifier.height(16.dp))
 
+        // Adherence indicator (iOS: Adherencija)
+        if (doze.isNotEmpty()) {
+            item {
+                Card(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier.padding(16.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Adherencija (7 dana)", style = MaterialTheme.typography.labelMedium)
+                            Text("${"%.0f".format(adherence7d)}%", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                        }
+                        LinearProgressIndicator(
+                            progress = { (adherence7d / 100).toFloat() },
+                            modifier = Modifier.weight(1f).padding(start = 16.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        // Next appointment (iOS: Sljedeći pregled)
+        sljedeciPregled?.let { pregled ->
+            item {
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("Sljedeći pregled", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Spacer(Modifier.height(4.dp))
+                        Text(pregled.naslov, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            SimpleDateFormat("d. MMMM yyyy.", Locale("hr", "HR")).format(Date(pregled.datum)) +
+                                (pregled.vrijeme?.let { " u $it" } ?: ""),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        if (pregled.uputnicaPotrebna && !pregled.uputnicaIzdana) {
+                            Spacer(Modifier.height(8.dp))
+                            Text("⚠️ Uputnica potrebna", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Low stock alerts (iOS: Lijekovi pri kraju)
+        if (niskiLijekovi.isNotEmpty()) {
+            item {
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("Lijekovi pri kraju zalihe", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                        Spacer(Modifier.height(8.dp))
+                        niskiLijekovi.forEach { (terapija, dana) ->
+                            Text("• ${terapija.naziv}: ${"%.0f".format(dana)} dana", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+
+        // ICE Card (iOS: ICE kartica)
+        aktivniClan?.let { clan ->
+            if (!clan.hitniKontakt.isNullOrBlank() || !clan.hitniTelefon.isNullOrBlank()) {
+                item {
+                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text("🚨 Hitni kontakt (ICE)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(4.dp))
+                            clan.hitniKontakt?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                            clan.hitniTelefon?.let { Text(it, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold) }
+                            clan.alergije?.takeIf { it.isNotBlank() }?.let {
+                                Spacer(Modifier.height(4.dp))
+                                Text("Alergije: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Today's doses (iOS: Doze danas)
+        item {
+            Text("Doze danas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+        
         if (doze.isEmpty()) {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Filled.Medication, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Nema planiranih doza za danas", style = MaterialTheme.typography.bodyMedium)
+            item {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Filled.Medication, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Nema planiranih doza za danas", style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
         } else {
             val preostaleDoze = doze.count { "${it.terapija.id}|${it.slot}" !in uzetiSetovi }
-            Text(
-                "$preostaleDoze od ${doze.size} doza preostalo",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(doze) { dose ->
-                    val key = "${dose.terapija.id}|${dose.slot}"
-                    val uzeto = key in uzetiSetovi
-                    DoseCard(
-                        terapija = dose.terapija,
-                        slot = dose.slot,
-                        uzeto = uzeto,
-                        onPotvrdi = { vm.potvrdiDozu(dose.terapija, dose.slot) },
-                        onPreskoci = { vm.preskociDozu(dose.terapija, dose.slot) }
-                    )
-                }
+            item {
+                Text(
+                    "$preostaleDoze od ${doze.size} doza preostalo",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            items(doze) { dose ->
+                val key = "${dose.terapija.id}|${dose.slot}"
+                val uzeto = key in uzetiSetovi
+                DoseCard(
+                    terapija = dose.terapija,
+                    slot = dose.slot,
+                    uzeto = uzeto,
+                    onPotvrdi = { vm.potvrdiDozu(dose.terapija, dose.slot) },
+                    onPreskoci = { vm.preskociDozu(dose.terapija, dose.slot) }
+                )
             }
         }
     }

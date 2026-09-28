@@ -52,6 +52,9 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
         val danas = DoseSchedule.dayStart()
         return aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.uzimanjaZaDan(id, danas) }
     }
+    
+    fun svaUzimanja(): Flow<List<UzimanjeEntity>> =
+        aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.svaUzimanjaZaClana(id) }
 
     fun potvrdiDozu(terapija: TerapijaEntity, slot: String) = viewModelScope.launch {
         val clanId = _aktivniClanId.value ?: return@launch
