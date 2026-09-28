@@ -19,14 +19,14 @@ import com.mojtijek.doktor.ui.profil.ProfilScreen
 import com.mojtijek.doktor.ui.terapije.TerapijeScreen
 
 private sealed class Tab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    object Pocetna : Tab("pocetna", "Početna", Icons.Filled.Home)
-    object Pracenje : Tab("pracenje", "Praćenje", Icons.Filled.MonitorHeart)
+    object Danas : Tab("danas", "Danas", Icons.Filled.Home)
     object Terapije : Tab("terapije", "Terapije", Icons.Filled.Medication)
-    object Izvjestaji : Tab("izvjestaji", "Izvještaji", Icons.Filled.Assessment)
+    object Nalazi : Tab("nalazi", "Nalazi", Icons.Filled.Description)
+    object Pracenje : Tab("pracenje", "Praćenje", Icons.Filled.MonitorHeart)
     object Profil : Tab("profil", "Profil", Icons.Filled.Person)
 }
 
-private val tabs = listOf(Tab.Pocetna, Tab.Pracenje, Tab.Terapije, Tab.Izvjestaji, Tab.Profil)
+private val tabs = listOf(Tab.Danas, Tab.Terapije, Tab.Nalazi, Tab.Pracenje, Tab.Profil)
 
 @Composable
 fun MojTijekApp(vm: MojTijekViewModel) {
@@ -56,13 +56,13 @@ fun MojTijekApp(vm: MojTijekViewModel) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Tab.Pocetna.route,
+            startDestination = Tab.Danas.route,
             modifier = androidx.compose.ui.Modifier.padding(padding)
         ) {
-            composable(Tab.Pocetna.route) { HomeScreen(vm) }
-            composable(Tab.Pracenje.route) { PracenjeScreen(vm) }
+            composable(Tab.Danas.route) { HomeScreen(vm) }
             composable(Tab.Terapije.route) { TerapijeScreen(vm) }
-            composable(Tab.Izvjestaji.route) { IzvjestajiScreen(vm) }
+            composable(Tab.Nalazi.route) { IzvjestajiScreen(vm) }
+            composable(Tab.Pracenje.route) { PracenjeScreen(vm) }
             composable(Tab.Profil.route) { ProfilScreen(vm) }
         }
     }

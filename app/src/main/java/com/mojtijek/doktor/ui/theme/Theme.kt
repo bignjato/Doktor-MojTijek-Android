@@ -8,45 +8,34 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Blue500,
-    onPrimary = Blue50,
-    primaryContainer = Blue700,
+    primary = TealPrimary,
+    onPrimary = Color.Black,
+    primaryContainer = TealDark,
+    secondary = TealLight,
     background = DarkBackground,
     surface = DarkSurface,
+    surfaceVariant = DarkSurfaceVariant,
     onBackground = DarkOnSurface,
-    onSurface = DarkOnSurface
+    onSurface = DarkOnSurface,
+    onSurfaceVariant = DarkOnSurfaceVariant
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Blue500,
-    onPrimary = Blue50,
-    primaryContainer = Blue700,
-    background = Blue50,
-    surface = DarkSurface,
-    onBackground = DarkBackground,
-    onSurface = DarkOnSurface
-)
+// Force dark theme to match iOS
+private val LightColorScheme = DarkColorScheme
 
 @Composable
 fun DoktorMojTijekTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true, // Force dark theme to match iOS
+    dynamicColor: Boolean = false, // Disable dynamic color to match iOS
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
+    // Always use dark theme to match iOS MojTijek
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = DarkColorScheme,
         content = content
     )
 }
