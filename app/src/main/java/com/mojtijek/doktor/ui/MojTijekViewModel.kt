@@ -52,14 +52,14 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
             alergije = "Polen, penicilin",
             hitniKontakt = "Ivan Horvat (suprug)",
             hitniTelefon = "+385 98 123 4567",
-            boja = "#E91E63",
+            boja = "#4ECDC4",
             redoslijed = 0,
             aktivan = true
         )
         repo.upsertClan(ana)
         _aktivniClanId.value = ana.id
         
-        // Demo therapies
+        // Demo therapies with multiple doses per day
         val terapija1 = TerapijaEntity(
             clanId = ana.id,
             naziv = "Euthyrox",
@@ -69,12 +69,13 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
             putaDnevno = 1,
             vremena = "07:00",
             komPoKutiji = 100.0,
-            kolicina = 45.0,
+            kolicina = 8.0,
             pragDana = 7,
             trajni = true,
             aktivna = true,
             razlog = "Hipotireoza",
-            receptDo = System.currentTimeMillis() + (60L * 24 * 60 * 60 * 1000)
+            napomena = "Uzeti natašte, 30 minuta prije doručka. Izbjegavati istovremenu primjenu s kalcijem.",
+            receptDo = System.currentTimeMillis() + (20L * 24 * 60 * 60 * 1000)
         )
         repo.upsertTerapija(terapija1)
         
@@ -91,43 +92,115 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
             pragDana = 7,
             trajni = true,
             aktivna = true,
-            razlog = "Nedostatak vitamina D"
+            razlog = "Nedostatak vitamina D",
+            napomena = "Uzimati s obrokom koji sadrži masti za bolju apsorpciju."
         )
         repo.upsertTerapija(terapija2)
+        
+        val terapija3 = TerapijaEntity(
+            clanId = ana.id,
+            naziv = "Omega-3",
+            jacina = "1000mg",
+            oblik = "kapsula",
+            dozaKom = 1.0,
+            putaDnevno = 2,
+            vremena = "12:00,20:00",
+            komPoKutiji = 90.0,
+            kolicina = 35.0,
+            pragDana = 10,
+            trajni = true,
+            aktivna = true,
+            razlog = "Kardiovaskularno zdravlje"
+        )
+        repo.upsertTerapija(terapija3)
+        
+        val terapija4 = TerapijaEntity(
+            clanId = ana.id,
+            naziv = "Probiotik",
+            jacina = "10 milijardi CFU",
+            oblik = "kapsula",
+            dozaKom = 1.0,
+            putaDnevno = 1,
+            vremena = "22:00",
+            komPoKutiji = 30.0,
+            kolicina = 22.0,
+            pragDana = 5,
+            trajni = true,
+            aktivna = true,
+            razlog = "Zdravlje crijeva"
+        )
+        repo.upsertTerapija(terapija4)
         
         // Demo appointment
         val pregled = DogadjajEntity(
             clanId = ana.id,
             vrsta = "pregled",
             naslov = "Kontrola kod endokrinologa",
-            datum = System.currentTimeMillis() + (14L * 24 * 60 * 60 * 1000),
+            datum = System.currentTimeMillis() + (5L * 24 * 60 * 60 * 1000),
             vrijeme = "10:30",
             lokacija = "Poliklinika Medico, Zagreb",
             uputnicaPotrebna = true,
             uputnicaIzdana = true,
-            status = "planirano"
+            status = "planirano",
+            napomena = "Dr. Kovač - endokrinološki pregled, uzeti posljednje nalaze"
         )
         repo.upsertDogadjaj(pregled)
         
-        // Demo measurements
+        // Rich demo measurements to match iOS
+        val koraci = MjerenjeEntity(
+            clanId = ana.id,
+            tip = "koraci",
+            vrijednost = 7542.0,
+            jedinica = "koraka",
+            ts = System.currentTimeMillis() - (1L * 60 * 60 * 1000)
+        )
+        repo.upsertMjerenje(koraci)
+        
         val tlak = MjerenjeEntity(
             clanId = ana.id,
-            tip = "tlak",
+            tip = "krvni tlak",
             vrijednost = 125.0,
-            vrijednost2 = 82.0,
+            vrijednost2 = 71.0,
             jedinica = "mmHg",
-            ts = System.currentTimeMillis() - (2L * 60 * 60 * 1000)
+            ts = System.currentTimeMillis() - (3L * 60 * 60 * 1000)
         )
         repo.upsertMjerenje(tlak)
+        
+        val secer = MjerenjeEntity(
+            clanId = ana.id,
+            tip = "šećer",
+            vrijednost = 5.2,
+            jedinica = "mmol/L",
+            ts = System.currentTimeMillis() - (4L * 60 * 60 * 1000)
+        )
+        repo.upsertMjerenje(secer)
+        
+        val puls = MjerenjeEntity(
+            clanId = ana.id,
+            tip = "puls",
+            vrijednost = 72.0,
+            jedinica = "otkucaja/min",
+            ts = System.currentTimeMillis() - (2L * 60 * 60 * 1000)
+        )
+        repo.upsertMjerenje(puls)
         
         val tezina = MjerenjeEntity(
             clanId = ana.id,
             tip = "težina",
             vrijednost = 68.5,
             jedinica = "kg",
-            ts = System.currentTimeMillis() - (1L * 24 * 60 * 60 * 1000)
+            ts = System.currentTimeMillis() - (12L * 60 * 60 * 1000)
         )
         repo.upsertMjerenje(tezina)
+        
+        val temp = MjerenjeEntity(
+            clanId = ana.id,
+            tip = "temperatura",
+            vrijednost = 36.6,
+            jedinica = "°C",
+            ts = System.currentTimeMillis() - (8L * 60 * 60 * 1000)
+        )
+        repo.upsertMjerenje(temp)
     }
 
     fun azurirajClana(clan: ClanEntity) = viewModelScope.launch { repo.upsertClan(clan) }
