@@ -130,9 +130,9 @@ private fun MojDanContent(vm: MojTijekViewModel) {
         Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(bottom = 90.dp),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(bottom = 100.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(28.dp)
     ) {
         // Header
         item {
@@ -152,15 +152,16 @@ private fun MojDanContent(vm: MojTijekViewModel) {
                 )
                 FloatingActionButton(
                     onClick = { },
-                    modifier = Modifier.size(44.dp),
+                    modifier = Modifier.size(50.dp),
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 2.dp,
-                        pressedElevation = 4.dp
+                        defaultElevation = 4.dp,
+                        pressedElevation = 8.dp
                     )
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Dodaj", modifier = Modifier.size(24.dp))
+                    Icon(Icons.Filled.Add, contentDescription = "Dodaj", modifier = Modifier.size(26.dp))
                 }
             }
         }
@@ -209,17 +210,17 @@ private fun MojDanContent(vm: MojTijekViewModel) {
                 Text(
                     "Terapije koje treba uzeti",
                     color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 18.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = (-0.3).sp
+                    letterSpacing = (-0.4).sp
                 )
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Text(
                         "${doze.size - neuzetaDoze.size}/${doze.size}",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
@@ -318,28 +319,29 @@ private fun MemberSelectorCard(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+        tonalElevation = 2.dp
     ) {
         Row(
-            Modifier.padding(12.dp),
+            Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onPrevious) {
                 Icon(
                     Icons.Filled.ChevronLeft,
                     contentDescription = "Prethodni",
+                    modifier = Modifier.size(26.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(8.dp))
             
             // Avatar with initials
             Box(
                 Modifier
-                    .size(50.dp)
+                    .size(54.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
@@ -348,20 +350,21 @@ private fun MemberSelectorCard(
                     clan.ime.split(" ").mapNotNull { it.firstOrNull() }.take(2).joinToString(""),
                     color = Color.Black,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 19.sp
                 )
             }
             
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(16.dp))
             
             Column(Modifier.weight(1f)) {
                 Text(
                     clan.ime,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 17.sp,
-                    letterSpacing = (-0.2).sp
+                    fontSize = 18.sp,
+                    letterSpacing = (-0.3).sp
                 )
+                Spacer(Modifier.height(2.dp))
                 Text(
                     SimpleDateFormat("EEEE, d. MMMM yyyy.", Locale("hr", "HR")).format(Date()),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -373,6 +376,7 @@ private fun MemberSelectorCard(
                 Icon(
                     Icons.Filled.ChevronRight,
                     contentDescription = "Sljedeći",
+                    modifier = Modifier.size(26.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -384,12 +388,12 @@ private fun MemberSelectorCard(
 private fun HealthScoreCard(score: Int, adherencePercent: Int) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(30.dp),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+        tonalElevation = 2.dp
     ) {
         Row(
-            Modifier.padding(20.dp),
+            Modifier.padding(24.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -454,40 +458,44 @@ private fun HealthScoreCard(score: Int, adherencePercent: Int) {
 
 @Composable
 private fun QuickActionsGrid() {
-    Row(
+    Column(
         Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        QuickActionButton(
-            icon = Icons.Filled.Edit,
-            label = "Dnevnik",
-            onClick = { },
-            modifier = Modifier.weight(1f)
-        )
-        QuickActionButton(
-            icon = Icons.Filled.Folder,
-            label = "Kartoteka",
-            onClick = { },
-            modifier = Modifier.weight(1f)
-        )
-    }
-    Spacer(Modifier.height(12.dp))
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        QuickActionButton(
-            icon = Icons.Filled.CalendarMonth,
-            label = "Kalendar",
-            onClick = { },
-            modifier = Modifier.weight(1f)
-        )
-        QuickActionButton(
-            icon = Icons.Filled.Receipt,
-            label = "Uputnica",
-            onClick = { },
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            QuickActionButton(
+                icon = Icons.Filled.Edit,
+                label = "Dnevnik",
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionButton(
+                icon = Icons.Filled.Folder,
+                label = "Kartoteka",
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            QuickActionButton(
+                icon = Icons.Filled.CalendarMonth,
+                label = "Kalendar",
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionButton(
+                icon = Icons.Filled.Receipt,
+                label = "Uputnica",
+                onClick = { },
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
@@ -500,29 +508,29 @@ private fun QuickActionButton(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(72.dp),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.height(80.dp),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 0.dp
+        tonalElevation = 1.dp
     ) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 icon,
                 contentDescription = label,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(28.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
                 label,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 12.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -533,11 +541,12 @@ private fun QuickActionButton(
 private fun LowStockWarning(therapies: List<TerapijaEntity>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFFFA726).copy(alpha = 0.15f)
+        shape = RoundedCornerShape(26.dp),
+        color = Color(0xFFFFA726).copy(alpha = 0.15f),
+        tonalElevation = 1.dp
     ) {
         Row(
-            Modifier.padding(16.dp),
+            Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -623,13 +632,15 @@ private fun DoseCard(
     onUzeto: () -> Unit,
     onOdgodi: () -> Unit
 ) {
+    // Hero dose card - large, soft, prominent
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 2.dp
+        tonalElevation = 3.dp,
+        shadowElevation = 4.dp
     ) {
-        Column(Modifier.padding(24.dp)) {
+        Column(Modifier.padding(28.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Filled.Schedule,
@@ -673,67 +684,68 @@ private fun DoseCard(
             )
             
             terapija.napomena?.takeIf { it.isNotBlank() }?.let { napomena ->
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(16.dp))
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surface
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                    tonalElevation = 1.dp
                 ) {
-                    Column(Modifier.padding(14.dp)) {
+                    Column(Modifier.padding(16.dp)) {
                         Text(
                             "Kratko o lijeku",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         Text(
                             napomena,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 13.sp,
-                            lineHeight = 18.sp
+                            lineHeight = 19.sp
                         )
                     }
                 }
             }
             
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
             
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Button(
                     onClick = onUzeto,
-                    modifier = Modifier.weight(1f).height(50.dp),
+                    modifier = Modifier.weight(1f).height(54.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(27.dp),
                     elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 2.dp,
-                        pressedElevation = 4.dp
+                        defaultElevation = 3.dp,
+                        pressedElevation = 6.dp
                     )
                 ) {
                     Text(
                         "Uzeto",
-                        fontSize = 16.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 OutlinedButton(
                     onClick = onOdgodi,
-                    modifier = Modifier.weight(1f).height(50.dp),
+                    modifier = Modifier.weight(1f).height(54.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(27.dp),
                     border = ButtonDefaults.outlinedButtonBorder.copy(
                         width = 1.5.dp
                     )
                 ) {
                     Text(
                         "Odgodi",
-                        fontSize = 16.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -746,11 +758,12 @@ private fun DoseCard(
 private fun EmptyDoseCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp
     ) {
         Column(
-            Modifier.padding(40.dp),
+            Modifier.padding(48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -774,18 +787,18 @@ private fun EmptyDoseCard() {
 private fun AppointmentCard(pregled: DogadjajEntity) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+        tonalElevation = 2.dp
     ) {
         Row(
-            Modifier.padding(18.dp),
+            Modifier.padding(22.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -839,12 +852,12 @@ private fun AppointmentCard(pregled: DogadjajEntity) {
 private fun EmptyAppointmentCard() {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+        tonalElevation = 2.dp
     ) {
         Box(
-            Modifier.padding(32.dp),
+            Modifier.padding(40.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -860,17 +873,18 @@ private fun EmptyAppointmentCard() {
 private fun ICECard(clan: ClanEntity) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = Color(0xFFEF5350).copy(alpha = 0.15f)
+        shape = RoundedCornerShape(28.dp),
+        color = Color(0xFFEF5350).copy(alpha = 0.15f),
+        tonalElevation = 2.dp
     ) {
         Row(
-            Modifier.padding(18.dp),
+            Modifier.padding(22.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFEF5350).copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -916,11 +930,11 @@ private fun ICECard(clan: ClanEntity) {
 
 @Composable
 private fun MetricsGrid(zadnjaMjerenja: Map<String, MjerenjeEntity?>) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         zadnjaMjerenja.entries.chunked(2).forEach { row ->
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 row.forEach { (tip, mjerenje) ->
                     MetricCard(tip, mjerenje, Modifier.weight(1f))
@@ -939,11 +953,11 @@ private fun MetricCard(tip: String, mjerenje: MjerenjeEntity?, modifier: Modifie
     
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+        tonalElevation = 2.dp
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(18.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,

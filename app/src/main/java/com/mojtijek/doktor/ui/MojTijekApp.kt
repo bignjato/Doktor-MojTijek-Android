@@ -64,63 +64,29 @@ private fun BoxScope.FloatingNavBar(navController: androidx.navigation.NavHostCo
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     
+    // True capsule nav bar with full labels visible
     Surface(
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .padding(horizontal = 20.dp, vertical = 12.dp)
-            .height(68.dp),
-        shape = RoundedCornerShape(34.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-        tonalElevation = 8.dp,
-        shadowElevation = 12.dp
+            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .fillMaxWidth()
+            .height(72.dp),
+        shape = RoundedCornerShape(36.dp), // True pill shape
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+        tonalElevation = 3.dp,
+        shadowElevation = 16.dp
     ) {
         Row(
             Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
+                .fillMaxSize()
+                .padding(horizontal = 6.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             tabs.forEach { tab ->
                 val selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true
                 
-                NavigationBarItem(
-                    icon = {
-                        Box(
-                            modifier = if (selected) {
-                                Modifier
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            } else {
-                                Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                            },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    tab.icon,
-                                    contentDescription = tab.label,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = if (selected) MaterialTheme.colorScheme.primary 
-                                           else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                if (selected) {
-                                    Text(
-                                        tab.label,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    label = {},
-                    selected = selected,
+                Surface(
                     onClick = {
                         navController.navigate(tab.route) {
                             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -128,12 +94,38 @@ private fun BoxScope.FloatingNavBar(navController: androidx.navigation.NavHostCo
                             restoreState = true
                         }
                     },
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(30.dp), // Fully pill-shaped items
+                    color = if (selected) 
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    else 
+                        Color.Transparent
+                ) {
+                    Column(
+                        Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            tab.icon,
+                            contentDescription = tab.label,
+                            modifier = Modifier.size(22.dp),
+                            tint = if (selected) MaterialTheme.colorScheme.primary 
+                                   else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            tab.label,
+                            fontSize = 11.sp,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                            color = if (selected) MaterialTheme.colorScheme.primary 
+                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            maxLines = 1
+                        )
+                    }
+                }
             }
         }
     }
