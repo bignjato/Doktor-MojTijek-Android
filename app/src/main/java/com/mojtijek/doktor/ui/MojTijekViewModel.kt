@@ -7,7 +7,8 @@ import com.mojtijek.doktor.data.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
@@ -202,7 +203,7 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
         )
         repo.upsertMjerenje(temp)
         
-        // Demo documents
+        // Demo documents with full content
         val nalaz1 = DokumentEntity(
             clanId = ana.id,
             naziv = "Kompletna krvna slika",
@@ -210,7 +211,34 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
             datum = System.currentTimeMillis() - (15L * 24 * 60 * 60 * 1000),
             ustanova = "Poliklinika Medico",
             lijecnik = "Dr. Marić",
-            napomena = "Nalazi uredni"
+            napomena = "Nalazi uredni",
+            objasnjenje = """KOMPLETNA KRVNA SLIKA
+            
+Pacijent: Ana Horvat
+Datum: ${SimpleDateFormat("d. MMMM yyyy.", Locale("hr", "HR")).format(Date(System.currentTimeMillis() - (15L * 24 * 60 * 60 * 1000)))}
+Ustanova: Poliklinika Medico
+Liječnik: Dr. Marić
+
+ERITROCITI
+• Eritrociti: 4.52 × 10¹²/L (N: 4.0-5.2)
+• Hemoglobin: 138 g/L (N: 120-160)
+• Hematokrit: 0.41 (N: 0.36-0.46)
+• MCV: 90.5 fL (N: 80-100)
+• MCH: 30.5 pg (N: 27-32)
+• MCHC: 337 g/L (N: 320-360)
+
+LEUKOCITI
+• Leukociti: 6.8 × 10⁹/L (N: 4.0-10.0)
+• Neutrofili: 58% (N: 40-70)
+• Limfociti: 32% (N: 20-40)
+• Monociti: 7% (N: 2-10)
+• Eozinofili: 2% (N: 0-5)
+• Bazofili: 1% (N: 0-2)
+
+TROMBOCITI
+• Trombociti: 245 × 10⁹/L (N: 150-400)
+
+ZAKLJUČAK: Svi parametri u referentnim granicama. Nalaz uredan."""
         )
         repo.upsertDokument(nalaz1)
         
@@ -221,7 +249,30 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
             datum = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000),
             ustanova = "KBC Zagreb",
             lijecnik = "Dr. Kovač",
-            napomena = "Srce uredno"
+            napomena = "Srce uredno",
+            objasnjenje = """ELEKTROKARDIOGRAFSKI NALAZ
+
+Pacijent: Ana Horvat
+Datum: ${SimpleDateFormat("d. MMMM yyyy.", Locale("hr", "HR")).format(Date(System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)))}
+Ustanova: KBC Zagreb
+Liječnik: Dr. Kovač, spec. kardiolog
+
+TEHNIČKI PODACI:
+• Brzina zapisa: 25 mm/s
+• Pojačanje: 10 mm/mV
+• Položaj: Ležeći
+
+REZULTATI:
+• Srčana frekvencija: 72 otkucaja/min (sinusni ritam)
+• PQ interval: 0.16 s (normalan)
+• QRS trajanje: 0.09 s (normalno)
+• QT interval: 0.38 s (normalan)
+• Električna os srca: Normalna pozicija
+
+OPIS:
+Sinusni ritam, frekvencija 72/min. Pravilna morfologija P-vala. PQ interval u granicama normale. QRS kompleks normalan. ST segment izoelektričan. T-val pozitivan u svim odvodima.
+
+ZAKLJUČAK: Uredan elektrokardiogram. Nema znakova ishemije ili aritmije."""
         )
         repo.upsertDokument(nalaz2)
         
@@ -231,7 +282,36 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
             vrsta = "recept",
             datum = System.currentTimeMillis() - (10L * 24 * 60 * 60 * 1000),
             ustanova = "Dom zdravlja Zagreb",
-            lijecnik = "Dr. Novak"
+            lijecnik = "Dr. Novak",
+            objasnjenje = """LIJEČNIČKI RECEPT
+
+Pacijent: Ana Horvat, 1. studenoga 2026.
+OIB: [zaštićeno]
+Ustanova: Dom zdravlja Zagreb
+Liječnik: Dr. Novak, spec. obiteljske medicine
+Datum izdavanja: ${SimpleDateFormat("d. MMMM yyyy.", Locale("hr", "HR")).format(Date(System.currentTimeMillis() - (10L * 24 * 60 * 60 * 1000)))}
+
+Rp/
+
+Amlodipini besilas 5mg
+comp. filct.
+D.t.d. N° 30 (trideset)
+
+S/
+1 tableta navečer
+Terapija arterijske hipertenzije
+
+NAPOMENA:
+• Uzimati svaki dan u isto vrijeme
+• Ne prekidati terapiju bez konzultacije s liječnikom
+• U slučaju nuspojava kontaktirati liječnika
+
+Vrijedi 30 dana od dana izdavanja.
+Može se ponoviti: 2× (dva puta)
+
+_______________________
+Dr. Novak, dr. med.
+Odobrenje HZZO"""
         )
         repo.upsertDokument(recept)
     }

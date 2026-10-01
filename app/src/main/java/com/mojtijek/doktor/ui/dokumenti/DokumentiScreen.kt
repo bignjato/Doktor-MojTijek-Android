@@ -27,6 +27,22 @@ fun DokumentiScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit = {}) {
     val aktivniId by vm.aktivniClanId.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var selectedDokument by remember { mutableStateOf<DokumentEntity?>(null) }
+    var showViewer by remember { mutableStateOf(false) }
+
+    // Show document viewer full screen
+    if (showViewer && selectedDokument != null) {
+        DokumentViewerScreen(
+            dokument = selectedDokument!!,
+            onNavigateBack = { showViewer = false; selectedDokument = null },
+            onEdit = { showViewer = false },
+            onDelete = { 
+                vm.obrisiDokument(it)
+                showViewer = false
+                selectedDokument = null
+            }
+        )
+        return
+    }
 
     Scaffold(
         topBar = {
@@ -43,7 +59,8 @@ fun DokumentiScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit = {}) {
             FloatingActionButton(
                 onClick = { showDialog = true },
                 shape = RoundedCornerShape(28.dp),
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 80.dp)
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Dodaj dokument")
             }
@@ -89,13 +106,16 @@ fun DokumentiScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit = {}) {
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                items(dokumenti) { dok ->
-                    DokumentCard(
-                        dokument = dok,
-                        onClick = { selectedDokument = dok },
-                        onDelete = { vm.obrisiDokument(it) }
-                    )
-                }
+                    items(dokumenti) { dok ->
+                        DokumentCard(
+                            dokument = dok,
+                            onClick = { 
+                                selectedDokument = dok
+                                showViewer = true
+                            },
+                            onDelete = { vm.obrisiDokument(it) }
+                        )
+                    }
             }
         }
     }
@@ -110,15 +130,175 @@ fun DokumentiScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit = {}) {
             }
         )
     }
+}
 
-    selectedDokument?.let { dok ->
-        DokumentDetaljiDialog(
-            dokument = dok,
-            onDismiss = { selectedDokument = null },
-            onUpdate = { updated ->
-                vm.dodajDokument(updated)
-                selectedDokument = null
+@Composable
+private fun DokumentViewerScreen(
+    dokument: DokumentEntity,
+    onNavigateBack: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: (DokumentEntity) -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(dokument.naziv ?: "Dokument", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Filled.ArrowBack, "Natrag")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showEditDialog = true }) {
+                        Icon(Icons.Filled.Edit, "Uredi")
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Filled.Delete, "Obriši")
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // Document header
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Type badge
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            dokument.vrsta.replaceFirstChar { it.uppercase() },
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    // Date
+                    dokument.datum?.let {
+                        Text(
+                            SimpleDateFormat("EEEE, d. MMMM yyyy.", Locale("hr", "HR")).format(Date(it)),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Institution and Doctor
+                    if (dokument.ustanova != null || dokument.lijecnik != null) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            dokument.ustanova?.let {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Filled.Business,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        it,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            dokument.lijecnik?.let {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Filled.Person,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        it,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
+
+            // Divider
+            item {
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                )
+            }
+
+            // Document body
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 1.dp
+                ) {
+                    Column(Modifier.padding(20.dp)) {
+                        val sadrzaj = dokument.objasnjenje ?: dokument.napomena
+                        if (sadrzaj != null && sadrzaj.isNotBlank()) {
+                            Text(
+                                sadrzaj,
+                                style = MaterialTheme.typography.bodyLarge,
+                                lineHeight = MaterialTheme.typography.bodyLarge.fontSize * 1.5
+                            )
+                        } else {
+                            Text(
+                                "Nema sadržaja dokumenta.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Obriši dokument?") },
+            text = { Text("Jeste li sigurni da želite obrisati ovaj dokument?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete(dokument)
+                    showDeleteDialog = false
+                }) {
+                    Text("Obriši", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Odustani")
+                }
+            }
+        )
+    }
+
+    if (showEditDialog) {
+        DokumentEditDialog(
+            dokument = dokument,
+            onDismiss = { showEditDialog = false },
+            onSave = { /* Handle save in parent */ }
         )
     }
 }
@@ -346,10 +526,10 @@ private fun NoviDokumentDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DokumentDetaljiDialog(
+private fun DokumentEditDialog(
     dokument: DokumentEntity,
     onDismiss: () -> Unit,
-    onUpdate: (DokumentEntity) -> Unit
+    onSave: (DokumentEntity) -> Unit = {}
 ) {
     var naziv by remember { mutableStateOf(dokument.naziv ?: "") }
     var vrsta by remember { mutableStateOf(dokument.vrsta) }
@@ -456,7 +636,7 @@ private fun DokumentDetaljiDialog(
         confirmButton = {
             TextButton(onClick = {
                 if (naziv.isNotBlank()) {
-                    onUpdate(
+                    onSave(
                         dokument.copy(
                             naziv = naziv,
                             vrsta = vrsta,
@@ -466,6 +646,7 @@ private fun DokumentDetaljiDialog(
                             objasnjenje = objasnjenje.ifBlank { null }
                         )
                     )
+                    onDismiss()
                 }
             }) {
                 Text("Spremi")
@@ -473,7 +654,7 @@ private fun DokumentDetaljiDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Zatvori")
+                Text("Odustani")
             }
         }
     )
