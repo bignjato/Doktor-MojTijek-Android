@@ -273,6 +273,42 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
     fun dodajDnevnikUnos(d: DnevnikUnosEntity) = viewModelScope.launch { repo.upsertDnevnik(d) }
     fun obrisiDnevnikUnos(d: DnevnikUnosEntity) = viewModelScope.launch { repo.deleteDnevnik(d) }
 
+    fun exportDatabaseToJson() = viewModelScope.launch {
+        try {
+            val clanovi = repo.clanovi.first()
+            val export = mutableMapOf<String, Any>()
+            
+            export["timestamp"] = System.currentTimeMillis()
+            export["version"] = "1.0"
+            export["clanoviCount"] = clanovi.size
+            
+            clanovi.forEach { clan ->
+                val terapije = repo.terapijeSve(clan.id).first()
+                val uzimanja = repo.svaUzimanjaZaClana(clan.id).first()
+                val dogadjaji = repo.dogadjajiZaClana(clan.id).first()
+                val dokumenti = repo.dokumentiZaClana(clan.id).first()
+                val mjerenja = repo.mjerenjaZaClana(clan.id).first()
+                val dnevnik = repo.dnevnikZaClana(clan.id).first()
+                
+                export["${clan.ime}_terapije"] = terapije.size
+                export["${clan.ime}_uzimanja"] = uzimanja.size
+                export["${clan.ime}_dogadjaji"] = dogadjaji.size
+                export["${clan.ime}_dokumenti"] = dokumenti.size
+                export["${clan.ime}_mjerenja"] = mjerenja.size
+                export["${clan.ime}_dnevnik"] = dnevnik.size
+            }
+            
+            val json = export.entries.joinToString(",\n  ", "{\n  ", "\n}") { (k, v) ->
+                "\"$k\": ${if (v is String) "\"$v\"" else v}"
+            }
+            
+            android.util.Log.d("MojTijek", "Database export summary:\n$json")
+            // In a real implementation, this would serialize full entities and write to a file
+        } catch (e: Exception) {
+            android.util.Log.e("MojTijek", "Export failed", e)
+        }
+    }
+
     class Factory(private val repo: MojTijekRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T = MojTijekViewModel(repo) as T

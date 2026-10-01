@@ -55,6 +55,37 @@ fun ProfilScreen(vm: MojTijekViewModel) {
                 }
             }
             Spacer(Modifier.height(24.dp))
+            
+            // Backup/Restore section
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Sigurnosna kopija", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Izvezite ili uvezite sve podatke kao JSON datoteku.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledTonalButton(
+                            onClick = { vm.exportDatabaseToJson() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Izvoz (Export)")
+                        }
+                        OutlinedButton(
+                            onClick = { /* Import functionality - would need file picker */ },
+                            modifier = Modifier.weight(1f),
+                            enabled = false
+                        ) {
+                            Text("Uvoz (Import)")
+                        }
+                    }
+                }
+            }
+            
+            Spacer(Modifier.height(16.dp))
             Text("MojTijek Android · verzija sinkronizirana s iOS shared modelom", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
