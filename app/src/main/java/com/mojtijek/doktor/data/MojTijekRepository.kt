@@ -16,6 +16,8 @@ class MojTijekRepository(private val db: MojTijekDatabase) {
 
     fun uzimanjaZaDan(clanId: String, danMillis: Long): Flow<List<UzimanjeEntity>> =
         db.uzimanjeDao().observeByClanAndDay(clanId, danMillis)
+    fun svaUzimanjaZaClana(clanId: String): Flow<List<UzimanjeEntity>> =
+        db.uzimanjeDao().observeByClan(clanId)
     suspend fun potvrdiUzimanje(u: UzimanjeEntity) = db.uzimanjeDao().upsert(u)
 
     fun dogadjajiZaClana(clanId: String): Flow<List<DogadjajEntity>> = db.dogadjajDao().observeByClan(clanId)
@@ -25,6 +27,7 @@ class MojTijekRepository(private val db: MojTijekDatabase) {
 
     fun dokumentiZaClana(clanId: String): Flow<List<DokumentEntity>> = db.dokumentDao().observeByClan(clanId)
     suspend fun upsertDokument(d: DokumentEntity) = db.dokumentDao().upsert(d)
+    suspend fun deleteDokument(d: DokumentEntity) = db.dokumentDao().delete(d)
 
     fun labZaClana(clanId: String): Flow<List<LabNalazEntity>> = db.labNalazDao().observeByClan(clanId)
     suspend fun upsertLab(l: LabNalazEntity) = db.labNalazDao().upsert(l)

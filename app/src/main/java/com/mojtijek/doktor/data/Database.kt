@@ -46,6 +46,9 @@ interface UzimanjeDao {
 
     @Query("SELECT * FROM uzimanje WHERE clanId = :clanId AND datum = :dan")
     fun observeByClanAndDay(clanId: String, dan: Long): Flow<List<UzimanjeEntity>>
+    
+    @Query("SELECT * FROM uzimanje WHERE clanId = :clanId ORDER BY ts DESC")
+    fun observeByClan(clanId: String): Flow<List<UzimanjeEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(uzimanje: UzimanjeEntity)

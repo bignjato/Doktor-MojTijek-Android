@@ -19,6 +19,16 @@ fun ProfilScreen(vm: MojTijekViewModel) {
     val clanovi by vm.clanovi.collectAsState()
     val aktivniId by vm.aktivniClanId.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
+    var odabraniClanId by remember { mutableStateOf<String?>(null) }
+
+    if (odabraniClanId != null) {
+        ClanDetaljiScreen(
+            vm = vm,
+            clanId = odabraniClanId!!,
+            onNavigateBack = { odabraniClanId = null }
+        )
+        return
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -35,11 +45,47 @@ fun ProfilScreen(vm: MojTijekViewModel) {
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(clanovi) { c ->
-                        ClanCard(c, odabran = c.id == aktivniId, onOdaberi = { vm.odaberiClana(c.id) })
+                        ClanCard(
+                            c,
+                            odabran = c.id == aktivniId,
+                            onOdaberi = { vm.odaberiClana(c.id) },
+                            onPrikaziDetalje = { odabraniClanId = c.id }
+                        )
                     }
                 }
             }
             Spacer(Modifier.height(24.dp))
+            
+            // Backup/Restore section
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Sigurnosna kopija", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Izvezite ili uvezite sve podatke kao JSON datoteku.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledTonalButton(
+                            onClick = { vm.exportDatabaseToJson() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Izvoz (Export)")
+                        }
+                        OutlinedButton(
+                            onClick = { /* Import functionality - would need file picker */ },
+                            modifier = Modifier.weight(1f),
+                            enabled = false
+                        ) {
+                            Text("Uvoz (Import)")
+                        }
+                    }
+                }
+            }
+            
+            Spacer(Modifier.height(16.dp))
             Text("MojTijek Android · verzija sinkronizirana s iOS shared modelom", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -50,8 +96,8 @@ fun ProfilScreen(vm: MojTijekViewModel) {
 }
 
 @Composable
-private fun ClanCard(clan: ClanEntity, odabran: Boolean, onOdaberi: () -> Unit) {
-    Card(onClick = onOdaberi) {
+private fun ClanCard(clan: ClanEntity, odabran: Boolean, onOdaberi: () -> Unit, onPrikaziDetalje: () -> Unit) {
+    Card(onClick = onPrikaziDetalje) {
         Row(Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             Icon(Icons.Filled.Person, contentDescription = null)
             Spacer(Modifier.width(12.dp))
@@ -61,7 +107,11 @@ private fun ClanCard(clan: ClanEntity, odabran: Boolean, onOdaberi: () -> Unit) 
                     Text("Liječnik: $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            if (odabran) AssistChip(onClick = {}, label = { Text("Aktivan") })
+            if (odabran) {
+                AssistChip(onClick = {}, label = { Text("Aktivan") })
+            } else {
+                TextButton(onClick = onOdaberi) { Text("Postavi aktivnim") }
+            }
         }
     }
 }
