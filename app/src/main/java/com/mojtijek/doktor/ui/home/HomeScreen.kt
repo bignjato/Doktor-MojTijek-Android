@@ -131,9 +131,20 @@ private fun MojDanContent(
         calculateHealthScore(uzimanja, mjerenja, doze)
     }
     
-    // Calculate adherence
-    val adherencePercent = remember(doze, uzetiSetovi) {
-        if (doze.isEmpty()) 100 else ((doze.size - neuzetaDoze.size) * 100 / doze.size)
+    // Calculate adherence (7-day, matching Terapije screen)
+    val adherencePercent = remember(uzimanja, terapije) {
+        val aktivneTerapije = terapije.filter { it.aktivna }
+        if (aktivneTerapije.isEmpty()) {
+            100
+        } else {
+            val sedamDana = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)
+            val zadnjiTjedan = uzimanja.filter { it.ts >= sedamDana }
+            if (zadnjiTjedan.isEmpty()) {
+                0
+            } else {
+                ((zadnjiTjedan.count { !it.preskoceno } * 100.0) / zadnjiTjedan.size).toInt().coerceIn(0, 100)
+            }
+        }
     }
     
     // Low stock warnings

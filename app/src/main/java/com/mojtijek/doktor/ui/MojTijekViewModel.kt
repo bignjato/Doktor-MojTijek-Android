@@ -201,6 +201,39 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
             ts = System.currentTimeMillis() - (8L * 60 * 60 * 1000)
         )
         repo.upsertMjerenje(temp)
+        
+        // Demo documents
+        val nalaz1 = DokumentEntity(
+            clanId = ana.id,
+            naziv = "Kompletna krvna slika",
+            vrsta = "nalaz",
+            datum = System.currentTimeMillis() - (15L * 24 * 60 * 60 * 1000),
+            ustanova = "Poliklinika Medico",
+            lijecnik = "Dr. Marić",
+            napomena = "Nalazi uredni"
+        )
+        repo.upsertDokument(nalaz1)
+        
+        val nalaz2 = DokumentEntity(
+            clanId = ana.id,
+            naziv = "EKG pregled",
+            vrsta = "nalaz",
+            datum = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000),
+            ustanova = "KBC Zagreb",
+            lijecnik = "Dr. Kovač",
+            napomena = "Srce uredno"
+        )
+        repo.upsertDokument(nalaz2)
+        
+        val recept = DokumentEntity(
+            clanId = ana.id,
+            naziv = "Recept za Amlopin",
+            vrsta = "recept",
+            datum = System.currentTimeMillis() - (10L * 24 * 60 * 60 * 1000),
+            ustanova = "Dom zdravlja Zagreb",
+            lijecnik = "Dr. Novak"
+        )
+        repo.upsertDokument(recept)
     }
 
     fun azurirajClana(clan: ClanEntity) = viewModelScope.launch { repo.upsertClan(clan) }

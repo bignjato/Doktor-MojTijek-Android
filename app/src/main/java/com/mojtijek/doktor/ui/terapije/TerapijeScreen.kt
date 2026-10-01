@@ -34,7 +34,10 @@ fun TerapijeScreen(vm: MojTijekViewModel) {
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { showDialog = true }) {
+            FloatingActionButton(
+                onClick = { showDialog = true },
+                modifier = Modifier.padding(bottom = 80.dp)
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = "Dodaj terapiju")
             }
         }
