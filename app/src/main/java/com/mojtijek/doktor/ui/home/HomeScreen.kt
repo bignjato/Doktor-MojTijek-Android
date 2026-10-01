@@ -27,13 +27,25 @@ import java.util.*
 import kotlin.math.min
 
 @Composable
-fun HomeScreen(vm: MojTijekViewModel) {
+fun HomeScreen(
+    vm: MojTijekViewModel,
+    onNavigateToDnevnik: () -> Unit = {},
+    onNavigateToKartoteka: () -> Unit = {},
+    onNavigateToKalendar: () -> Unit = {},
+    onNavigateToAppointment: () -> Unit = {}
+) {
     val clanovi by vm.clanovi.collectAsState()
     
     if (clanovi.isEmpty()) {
         OnboardingScreen(onLoadDemo = { vm.dodajSeedData() })
     } else {
-        MojDanContent(vm)
+        MojDanContent(
+            vm = vm,
+            onNavigateToDnevnik = onNavigateToDnevnik,
+            onNavigateToKartoteka = onNavigateToKartoteka,
+            onNavigateToKalendar = onNavigateToKalendar,
+            onNavigateToAppointment = onNavigateToAppointment
+        )
     }
 }
 
@@ -83,7 +95,13 @@ private fun OnboardingScreen(onLoadDemo: () -> Unit) {
 }
 
 @Composable
-private fun MojDanContent(vm: MojTijekViewModel) {
+private fun MojDanContent(
+    vm: MojTijekViewModel,
+    onNavigateToDnevnik: () -> Unit = {},
+    onNavigateToKartoteka: () -> Unit = {},
+    onNavigateToKalendar: () -> Unit = {},
+    onNavigateToAppointment: () -> Unit = {}
+) {
     val clanovi by vm.clanovi.collectAsState()
     val aktivniId by vm.aktivniClanId.collectAsState()
     val aktivniClan = remember(clanovi, aktivniId) { clanovi.find { it.id == aktivniId } }
@@ -190,7 +208,12 @@ private fun MojDanContent(vm: MojTijekViewModel) {
         
         // Quick Actions
         item {
-            QuickActionsGrid()
+            QuickActionsGrid(
+                onDnevnikClick = onNavigateToDnevnik,
+                onKartotekaClick = onNavigateToKartoteka,
+                onKalendarClick = onNavigateToKalendar,
+                onUputnicaClick = { /* Add referral logic */ }
+            )
         }
 
         // Low stock warning
@@ -457,7 +480,12 @@ private fun HealthScoreCard(score: Int, adherencePercent: Int) {
 }
 
 @Composable
-private fun QuickActionsGrid() {
+private fun QuickActionsGrid(
+    onDnevnikClick: () -> Unit,
+    onKartotekaClick: () -> Unit,
+    onKalendarClick: () -> Unit,
+    onUputnicaClick: () -> Unit
+) {
     Column(
         Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -469,13 +497,13 @@ private fun QuickActionsGrid() {
             QuickActionButton(
                 icon = Icons.Filled.Edit,
                 label = "Dnevnik",
-                onClick = { },
+                onClick = onDnevnikClick,
                 modifier = Modifier.weight(1f)
             )
             QuickActionButton(
                 icon = Icons.Filled.Folder,
                 label = "Kartoteka",
-                onClick = { },
+                onClick = onKartotekaClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -486,13 +514,13 @@ private fun QuickActionsGrid() {
             QuickActionButton(
                 icon = Icons.Filled.CalendarMonth,
                 label = "Kalendar",
-                onClick = { },
+                onClick = onKalendarClick,
                 modifier = Modifier.weight(1f)
             )
             QuickActionButton(
                 icon = Icons.Filled.Receipt,
                 label = "Uputnica",
-                onClick = { },
+                onClick = onUputnicaClick,
                 modifier = Modifier.weight(1f)
             )
         }

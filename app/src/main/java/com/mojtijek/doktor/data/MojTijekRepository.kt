@@ -27,6 +27,7 @@ class MojTijekRepository(private val db: MojTijekDatabase) {
 
     fun dokumentiZaClana(clanId: String): Flow<List<DokumentEntity>> = db.dokumentDao().observeByClan(clanId)
     suspend fun upsertDokument(d: DokumentEntity) = db.dokumentDao().upsert(d)
+    suspend fun deleteDokument(d: DokumentEntity) = db.dokumentDao().delete(d)
 
     fun labZaClana(clanId: String): Flow<List<LabNalazEntity>> = db.labNalazDao().observeByClan(clanId)
     suspend fun upsertLab(l: LabNalazEntity) = db.labNalazDao().upsert(l)

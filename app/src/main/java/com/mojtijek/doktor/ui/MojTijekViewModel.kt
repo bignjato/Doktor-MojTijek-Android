@@ -254,6 +254,7 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
     fun dokumentiZaAktivnog(): Flow<List<DokumentEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.dokumentiZaClana(id) }
     fun dodajDokument(d: DokumentEntity) = viewModelScope.launch { repo.upsertDokument(d) }
+    fun obrisiDokument(d: DokumentEntity) = viewModelScope.launch { repo.deleteDokument(d) }
 
     fun labZaAktivnog(): Flow<List<LabNalazEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.labZaClana(id) }

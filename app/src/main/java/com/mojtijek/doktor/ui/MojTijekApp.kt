@@ -47,11 +47,39 @@ fun MojTijekApp(vm: MojTijekViewModel) {
             startDestination = Tab.Danas.route,
             modifier = Modifier.fillMaxSize()
         ) {
-            composable(Tab.Danas.route) { HomeScreen(vm) }
+            composable(Tab.Danas.route) { 
+                HomeScreen(
+                    vm = vm,
+                    onNavigateToDnevnik = { navController.navigate("dnevnik") },
+                    onNavigateToKartoteka = { navController.navigate("kartoteka") },
+                    onNavigateToKalendar = { navController.navigate("kalendar") },
+                    onNavigateToAppointment = { /* Navigate to appointment detail */ }
+                )
+            }
             composable(Tab.Terapije.route) { TerapijeScreen(vm) }
             composable(Tab.Nalazi.route) { IzvjestajiScreen(vm) }
             composable(Tab.Pracenje.route) { PracenjeScreen(vm) }
             composable(Tab.Profil.route) { ProfilScreen(vm) }
+            
+            // Additional screens
+            composable("dnevnik") {
+                com.mojtijek.doktor.ui.dnevnik.DnevnikScreen(
+                    vm = vm,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("kartoteka") {
+                com.mojtijek.doktor.ui.dokumenti.DokumentiScreen(
+                    vm = vm,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("kalendar") {
+                com.mojtijek.doktor.ui.kalendar.KalendarScreen(
+                    vm = vm,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
         
         // Floating pill navigation bar (iOS-style)
