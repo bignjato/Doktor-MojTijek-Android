@@ -11,7 +11,7 @@ interface ClanDao {
     @Query("SELECT * FROM clan WHERE id = :id")
     suspend fun getById(id: String): ClanEntity?
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(clan: ClanEntity)
 
     @Delete
@@ -32,7 +32,7 @@ interface TerapijaDao {
     @Query("SELECT * FROM terapija WHERE id = :id")
     suspend fun getById(id: String): TerapijaEntity?
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(terapija: TerapijaEntity)
 
     @Delete
@@ -50,7 +50,7 @@ interface UzimanjeDao {
     @Query("SELECT * FROM uzimanje WHERE clanId = :clanId ORDER BY ts DESC")
     fun observeByClan(clanId: String): Flow<List<UzimanjeEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(uzimanje: UzimanjeEntity)
 
     @Query("SELECT * FROM uzimanje WHERE terapijaId = :terapijaId AND datum = :dan AND slot = :slot LIMIT 1")
@@ -68,7 +68,7 @@ interface DogadjajDao {
     @Query("SELECT * FROM dogadjaj WHERE datum >= :from ORDER BY datum ASC")
     fun observeUpcoming(from: Long): Flow<List<DogadjajEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(dogadjaj: DogadjajEntity)
 
     @Delete
@@ -80,7 +80,7 @@ interface DokumentDao {
     @Query("SELECT * FROM dokument WHERE clanId = :clanId ORDER BY datum DESC")
     fun observeByClan(clanId: String): Flow<List<DokumentEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(dokument: DokumentEntity)
 
     @Delete
@@ -95,7 +95,7 @@ interface LabNalazDao {
     @Query("SELECT * FROM lab_nalaz WHERE clanId = :clanId AND kratica = :kratica ORDER BY datum ASC")
     fun observeTrend(clanId: String, kratica: String): Flow<List<LabNalazEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(lab: LabNalazEntity)
 }
 
@@ -107,7 +107,7 @@ interface MjerenjeDao {
     @Query("SELECT * FROM mjerenje WHERE clanId = :clanId AND tip = :tip ORDER BY ts ASC")
     fun observeByType(clanId: String, tip: String): Flow<List<MjerenjeEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(mjerenje: MjerenjeEntity)
 
     @Delete
@@ -119,7 +119,7 @@ interface CijepljenjeDao {
     @Query("SELECT * FROM cijepljenje WHERE clanId = :clanId ORDER BY datum DESC")
     fun observeByClan(clanId: String): Flow<List<CijepljenjeEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(cijepljenje: CijepljenjeEntity)
 
     @Delete
@@ -131,7 +131,7 @@ interface DnevnikDao {
     @Query("SELECT * FROM dnevnik_unos WHERE clanId = :clanId ORDER BY datum DESC")
     fun observeByClan(clanId: String): Flow<List<DnevnikUnosEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(unos: DnevnikUnosEntity)
 
     @Delete
@@ -143,7 +143,7 @@ interface MenstruacijaDao {
     @Query("SELECT * FROM menstruacija WHERE clanId = :clanId ORDER BY datumPocetka DESC")
     fun observeByClan(clanId: String): Flow<List<MenstruacijaEntity>>
 
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(m: MenstruacijaEntity)
 
     @Delete
