@@ -81,6 +81,7 @@ import com.mojtijek.doktor.ui.MojTijekViewModel
 import com.mojtijek.doktor.ui.components.MemberAvatar
 import com.mojtijek.doktor.ui.components.MtCard
 import com.mojtijek.doktor.ui.components.Pill
+import com.mojtijek.doktor.ui.components.PotvrdiDozuDialog
 import com.mojtijek.doktor.ui.components.VITALI
 import com.mojtijek.doktor.ui.components.formatMjerenja
 import com.mojtijek.doktor.ui.components.vitalNaziv
@@ -259,30 +260,8 @@ private fun TerapijeZaUzeti(
     }
 
     zaPotvrdu?.let { doza ->
-        AlertDialog(
-            onDismissRequest = { zaPotvrdu = null },
-            title = { Text(stringResource(R.string.potvrdi_dozu)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(doza.terapija.naziv, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Podatak(stringResource(R.string.planirano), danVrijeme(doza.plannedMillis))
-                    Podatak(stringResource(R.string.vrijeme_uzimanja), danVrijeme(System.currentTimeMillis()))
-                    if (DoseSchedule.dayStart(doza.plannedMillis) != DoseSchedule.dayStart()) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Icon(Icons.Filled.Warning, contentDescription = null, tint = Mt.Orange, modifier = Modifier.size(18.dp))
-                            Text(stringResource(R.string.doza_drugi_dan), color = Mt.Orange)
-                        }
-                    }
-                    Text(stringResource(R.string.potvrdi_samo_ako), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { vm.potvrdiDozu(doza.terapija, doza.slot, doza.plannedMillis); zaPotvrdu = null }) {
-                    Text(stringResource(R.string.potvrdi_uzimanje))
-                }
-            },
-            dismissButton = { TextButton(onClick = { zaPotvrdu = null }) { Text(stringResource(R.string.odustani)) } },
-        )
+        PotvrdiDozuDialog(doza, onPotvrdi = { vm.potvrdiDozu(doza.terapija, doza.slot, doza.plannedMillis); zaPotvrdu = null },
+                          onOdustani = { zaPotvrdu = null })
     }
     if (potvrdaSvih) {
         AlertDialog(

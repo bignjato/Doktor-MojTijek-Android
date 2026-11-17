@@ -108,10 +108,27 @@ object DoseSchedule {
     fun dueToday(terapije: List<TerapijaEntity>, uzimanja: List<UzimanjeEntity>, sada: Long): List<ScheduledDose> =
         entriesForDay(terapije, sada).filter { zapis(it, uzimanja) == null && it.plannedMillis <= sada }
 
-    /** Pri kraju je (zaliha ≤ prag, zadano 3 dana) i nije već označeno kao naručeno. */
-    fun trebaNaruciti(t: TerapijaEntity): Boolean {
+    /** Zaliha ≤ prag (zadano 3 dana). */
+    fun priKraju(t: TerapijaEntity): Boolean {
         val dana = danaPreostalo(t) ?: return false
-        return t.narucenoTs == null && dana <= (t.pragDana ?: 3)
+        return dana <= (t.pragDana ?: 3)
+    }
+
+    /** Pri kraju je i nije već označeno kao naručeno. */
+    fun trebaNaruciti(t: TerapijaEntity): Boolean = priKraju(t) && t.narucenoTs == null
+
+    /** Sljedeći dan doze tjedne terapije (danas ako je danas taj dan); null za dnevnu. */
+    fun sljedeciDanDoze(t: TerapijaEntity, sada: Long): Long? {
+        val d = t.danUTjednu ?: return null
+        val c = Calendar.getInstance().apply { timeInMillis = dayStart(sada) }
+        c.add(Calendar.DAY_OF_YEAR, (d - c.get(Calendar.DAY_OF_WEEK) + 7) % 7)
+        return c.timeInMillis
+    }
+
+    /** Dio dana po satu doze: "ujutro" (< 11), "podne" (< 17), "navecer". */
+    fun dioDana(slot: String): String {
+        val sat = slot.substringBefore(":").toIntOrNull() ?: 12
+        return if (sat < 11) "ujutro" else if (sat < 17) "podne" else "navecer"
     }
 
     /** Broj dana zaliha preostalo, po iOS logici: kolicina / (dozaKom * putaDnevno po tjednu). */

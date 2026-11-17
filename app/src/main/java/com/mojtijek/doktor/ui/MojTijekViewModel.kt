@@ -345,8 +345,15 @@ Odobrenje HZZO"""
     }
 
     fun preskociDozu(terapija: TerapijaEntity, slot: String) = viewModelScope.launch {
-        repo.zabiljeziDozu(terapija.id, slot, DoseSchedule.dayStart(), preskoceno = true)
+        repo.preskociDozu(terapija.id, slot, DoseSchedule.dayStart())
     }
+
+    fun prebaciDozu(terapija: TerapijaEntity, slot: String) = viewModelScope.launch {
+        repo.prebaciDozu(terapija.id, slot, DoseSchedule.dayStart())
+    }
+
+    fun napuniZalihu(terapija: TerapijaEntity) = viewModelScope.launch { repo.napuniZalihu(terapija.id) }
+    fun oznaciNaruceno(terapija: TerapijaEntity, naruceno: Boolean) = viewModelScope.launch { repo.oznaciNaruceno(terapija.id, naruceno) }
 
     fun dogadjajiZaAktivnog(): Flow<List<DogadjajEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.dogadjajiZaClana(id) }

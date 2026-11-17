@@ -16,7 +16,55 @@ class MojTijekRepository(private val db: MojTijekDatabase, private val datoteke:
     fun terapijeAktivne(clanId: String): Flow<List<TerapijaEntity>> = db.terapijaDao().observeByClan(clanId)
     fun terapijeSve(clanId: String): Flow<List<TerapijaEntity>> = db.terapijaDao().observeAllByClan(clanId)
     /** Korisnikov unos/izmjena terapije: zaliha se vodi ako je upisana (kao iOS). */
-    suspend fun upsertTerapija(t: TerapijaEntity) = db.terapijaDao().upsert(t.copy(zalihaSet = t.kolicina > 0))
+    suspend fun upsertTerapija(t: TerapijaEntity) {
+        val s = t.copy(zalihaSet = t.kolicina > 0)
+        // Dovoljno zalihe → oznaka „naručeno” više ne vrijedi.
+        db.terapijaDao().upsert(if (DoseSchedule.priKraju(s)) s else s.copy(narucenoTs = null))
+    }
+
+    /** Zaprimljena kutija: +1 kutija, zaliha se vodi, oznaka „naručeno” se briše. */
+    suspend fun napuniZalihu(terapijaId: String) {
+        val t = db.terapijaDao().getById(terapijaId) ?: return
+        db.terapijaDao().upsert(t.copy(kolicina = t.kolicina + (if (t.komPoKutiji > 0) t.komPoKutiji else 30.0), zalihaSet = true,
+                                       datumPunjenja = System.currentTimeMillis(), narucenoTs = null))
+    }
+
+    suspend fun oznaciNaruceno(terapijaId: String, naruceno: Boolean) {
+        val t = db.terapijaDao().getById(terapijaId) ?: return
+        db.terapijaDao().upsert(t.copy(narucenoTs = if (naruceno) System.currentTimeMillis() else null))
+    }
+
+    private suspend fun promijeniZalihu(t: TerapijaEntity, promjena: Double) {
+        if (t.zalihaSet) db.terapijaDao().upsert(t.copy(kolicina = maxOf(0.0, t.kolicina + promjena)))
+    }
+
+    /** Dodir na čip doze (iOS toggleDose): nema zapisa → uzeto; preskočeno → uzeto; uzeto → poništi i vrati zalihu. */
+    suspend fun prebaciDozu(terapijaId: String, slot: String, dan: Long) = db.withTransaction {
+        val t = db.terapijaDao().getById(terapijaId) ?: return@withTransaction
+        val p = db.uzimanjeDao().getForSlot(terapijaId, dan, slot)
+        if (p != null && !p.preskoceno) {
+            db.uzimanjeDao().deleteForSlot(terapijaId, dan, slot)
+            promijeniZalihu(t, p.kolicina)
+        } else {
+            val osnova = p ?: UzimanjeEntity(terapijaId = t.id, clanId = t.clanId, datum = dan, slot = slot)
+            db.uzimanjeDao().upsert(osnova.copy(ts = System.currentTimeMillis(), preskoceno = false, kolicina = t.dozaKom))
+            promijeniZalihu(t, -t.dozaKom)
+        }
+    }
+
+    /** Preskakanje doze (iOS skipDose): ne troši zalihu; ponovni poziv poništava; uzeta doza vraća zalihu. */
+    suspend fun preskociDozu(terapijaId: String, slot: String, dan: Long) = db.withTransaction {
+        val t = db.terapijaDao().getById(terapijaId) ?: return@withTransaction
+        val p = db.uzimanjeDao().getForSlot(terapijaId, dan, slot)
+        if (p == null) {
+            db.uzimanjeDao().upsert(UzimanjeEntity(terapijaId = t.id, clanId = t.clanId, datum = dan, slot = slot, kolicina = 0.0, preskoceno = true))
+        } else if (p.preskoceno) {
+            db.uzimanjeDao().deleteForSlot(terapijaId, dan, slot)
+        } else {
+            db.uzimanjeDao().upsert(p.copy(kolicina = 0.0, preskoceno = true))
+            promijeniZalihu(t, p.kolicina)
+        }
+    }
     suspend fun deleteTerapija(t: TerapijaEntity) = db.terapijaDao().delete(t)
 
     fun uzimanjaZaDan(clanId: String, danMillis: Long): Flow<List<UzimanjeEntity>> =

@@ -78,6 +78,47 @@ class BazaTest {
         assertEquals(listOf("08:00", "14:00", "20:00"), DoseSchedule.effectiveSlots(TerapijaEntity(clanId = "c", naziv = "B", putaDnevno = 3)))
     }
 
+    /** Čip doze: uzeto ↔ poništeno vraća zalihu; preskočeno ne troši; preskočeno → uzeto troši jednom. */
+    @Test fun cipDozePrebacujeIPreskace() = runBlocking {
+        val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
+        val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00", kolicina = 10.0); repo.upsertTerapija(t)
+        suspend fun zaliha() = db.terapijaDao().getById(t.id)!!.kolicina
+        suspend fun zapisi() = repo.uzimanjaZaDan(clan.id, dan).first()
+
+        repo.prebaciDozu(t.id, "08:00", dan); assertEquals(9.0, zaliha(), 0.0)
+        repo.prebaciDozu(t.id, "08:00", dan); assertEquals(10.0, zaliha(), 0.0); assertTrue(zapisi().isEmpty())
+
+        repo.preskociDozu(t.id, "08:00", dan); assertEquals(10.0, zaliha(), 0.0); assertTrue(zapisi().single().preskoceno)
+        repo.prebaciDozu(t.id, "08:00", dan); assertEquals(9.0, zaliha(), 0.0); assertEquals(false, zapisi().single().preskoceno)
+        repo.preskociDozu(t.id, "08:00", dan); assertEquals("uzeta pa preskočena vraća zalihu", 10.0, zaliha(), 0.0)
+        repo.preskociDozu(t.id, "08:00", dan); assertTrue("ponovno preskakanje poništava", zapisi().isEmpty())
+    }
+
+    @Test fun napuniINaruceno() = runBlocking {
+        val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
+        val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00", kolicina = 2.0, komPoKutiji = 28.0); repo.upsertTerapija(t)
+        repo.oznaciNaruceno(t.id, true)
+        assertEquals(false, DoseSchedule.trebaNaruciti(db.terapijaDao().getById(t.id)!!))
+        repo.napuniZalihu(t.id)
+        val puna = db.terapijaDao().getById(t.id)!!
+        assertEquals(30.0, puna.kolicina, 0.0); assertEquals(null, puna.narucenoTs)
+    }
+
+    /** Adherencija: tjedna terapija se očekuje samo svoj dan; preskočena doza nije uzeta. */
+    @Test fun adherencijaINiz() {
+        val dnevna = TerapijaEntity(clanId = "c", naziv = "A", vremena = "08:00")
+        fun uzeto(unatrag: Int, preskoceno: Boolean = false) =
+            UzimanjeEntity(terapijaId = dnevna.id, clanId = "c", datum = DoseSchedule.dayStart(dan - unatrag * 86_400_000L + 3_600_000L), slot = "08:00", preskoceno = preskoceno)
+        val u = listOf(uzeto(1), uzeto(2), uzeto(3, preskoceno = true))
+        assertEquals(2, Adherencija.niz(listOf(dnevna), u, dan + 1))
+        assertEquals(listOf(0.0, 100.0, 100.0, 0.0), Adherencija.poDanu(listOf(dnevna), u, dan + 1, 4))
+        assertEquals(50, Adherencija.prosjek(listOf(dnevna), u, dan + 1, 4))
+        // Tjedna terapija bez ijedne doze: šest od sedam dana nema plana i broji se kao ispunjeno.
+        val tjedna = TerapijaEntity(clanId = "c", naziv = "T", vremena = "08:00", danUTjednu = 3)
+        assertEquals(6, Adherencija.poDanu(listOf(tjedna), emptyList(), dan + 1, 7).count { it == 100.0 })
+        assertEquals("ujutro", DoseSchedule.dioDana("08:00")); assertEquals("podne", DoseSchedule.dioDana("14:30")); assertEquals("navecer", DoseSchedule.dioDana("20:00"))
+    }
+
     @Test fun priKrajuPoPraguINarudzbi() {
         val t = TerapijaEntity(clanId = "c", naziv = "A", vremena = "08:00", kolicina = 3.0, zalihaSet = true)
         assertTrue(DoseSchedule.trebaNaruciti(t))
