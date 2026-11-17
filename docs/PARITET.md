@@ -42,7 +42,9 @@ Nakon 1.0: Pametna terapija, ciklus, ICE/QR, Health Connect, widget, Premium.
 
 ## Otvorene odluke (Boris)
 
-- **`applicationId`** — sada `com.mojtijek.doktor` (iz namespacea), naziv „Doktor MojTijek”. iOS je
-  `hr.infobot.mojtijek` / „MojTijek”. Nakon prve objave na Playu se NE može promijeniti.
 - **Play Console račun** (osobni ili tvrtkin) i uređaj za testiranje.
 - **Premium u 1.0** ili besplatno do pariteta.
+
+## Odlučeno
+
+- `applicationId` = `hr.infobot.mojtijek`, naziv „MojTijek” (kao iOS). Paket koda ostaje `com.mojtijek.doktor`.

@@ -11,6 +11,8 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        // Isti identitet kao iOS. Nakon prve objave na Playu se ne može promijeniti.
+        applicationId = "hr.infobot.mojtijek"
         minSdk = 26
         targetSdk = 35
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
