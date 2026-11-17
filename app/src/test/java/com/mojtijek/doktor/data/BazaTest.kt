@@ -1,0 +1,60 @@
+package com.mojtijek.doktor.data
+
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class BazaTest {
+    private val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), MojTijekDatabase::class.java)
+        .allowMainThreadQueries().build()
+    private val repo = MojTijekRepository(db)
+    private val dan = DoseSchedule.dayStart()
+
+    @After fun zatvori() = db.close()
+
+    /** Uređivanje člana ili terapije ne smije obrisati ono što visi na njima (REPLACE + CASCADE je to radio). */
+    @Test fun uredjivanjeNeBriseDjecu() = runBlocking {
+        val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
+        val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00"); repo.upsertTerapija(t)
+        repo.zabiljeziDozu(t.id, "08:00", dan, preskoceno = false)
+
+        repo.upsertClan(clan.copy(ime = "Test Novi"))
+        assertEquals(1, repo.terapijeSve(clan.id).first().size)
+
+        repo.upsertTerapija(t.copy(jacina = "5 mg"))
+        assertEquals(1, repo.uzimanjaZaDan(clan.id, dan).first().size)
+    }
+
+    @Test fun potvrdaDozeJeJednokratna() = runBlocking {
+        val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
+        val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00", dozaKom = 2.0, kolicina = 10.0)
+        repo.upsertTerapija(t)
+
+        repo.zabiljeziDozu(t.id, "08:00", dan, preskoceno = true)
+        assertEquals(10.0, db.terapijaDao().getById(t.id)!!.kolicina, 0.0)   // preskočeno ne troši zalihu
+
+        repo.zabiljeziDozu(t.id, "08:00", dan, preskoceno = false)
+        repo.zabiljeziDozu(t.id, "08:00", dan, preskoceno = false)           // drugi dodir
+        val zapisi = repo.uzimanjaZaDan(clan.id, dan).first()
+        assertEquals(1, zapisi.size)
+        assertEquals(false, zapisi[0].preskoceno)
+        assertEquals(8.0, db.terapijaDao().getById(t.id)!!.kolicina, 0.0)
+    }
+
+    @Test fun rasporedPostujeTjedniDan() {
+        val t = TerapijaEntity(clanId = "c", naziv = "Tjedni", vremena = "20:00,08:00", danUTjednu = 2)
+        val tjedan = (0..6).map { dan + it * 86_400_000L }
+        assertEquals(2, tjedan.sumOf { DoseSchedule.entriesForDay(listOf(t), it).size })
+        assertEquals(null, DoseSchedule.parse("08:00,8:00"))                  // duplikat vremena
+        assertEquals(listOf("08:00", "20:00"), DoseSchedule.effectiveSlots(t))
+    }
+}
