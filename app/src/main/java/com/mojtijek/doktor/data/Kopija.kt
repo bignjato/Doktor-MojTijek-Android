@@ -174,14 +174,14 @@ object Kopija {
     }
 
     /**
-     * Vraćanje kopije ZAMJENJUJE sve podatke. Kopija se prvo provjeri; baza se mijenja u jednoj
-     * transakciji, a datoteke tek nakon što je ona prošla.
+     * Vraćanje kopije ZAMJENJUJE sve podatke. Kopija se prvo provjeri, datoteke se zapišu sa strane,
+     * baza se mijenja u jednoj transakciji, i tek tada nove datoteke zamijene stare.
      */
     suspend fun uvezi(db: MojTijekDatabase, datoteke: Datoteke, tekst: String) {
         val root = provjeri(tekst).first
         val sada = System.currentTimeMillis()
         val clanId = HashMap<Int, String>(); val dokId = HashMap<Int, String>()
-        val sadrzaj = ArrayList<Pair<java.io.File, ByteArray>>()
+        val dokSadrzaj = HashMap<String, ByteArray>(); val lijekSadrzaj = HashMap<String, ByteArray>()
         fun novi() = UUID.randomUUID().toString()
         fun bajtovi(o: JSONObject, kljuc: String) = str(o, kljuc)?.let { runCatching { Base64.decode(it, Base64.DEFAULT) }.getOrNull() }
 
@@ -209,7 +209,7 @@ object Kopija {
                 napomena = str(d, "napomena"), obrada = str(d, "obrada"), obradaFaza = str(d, "obrada_faza"),
                 obradaInfo = str(d, "obrada_info"), objasnjenje = str(d, "objasnjenje"),
                 poslanoDoktoru = bool(d, "poslano_doktoru", false), poslanoTs = datum(d, "poslano_ts"), stvoren = datum(d, "stvoren") ?: sada
-            ).also { e -> int(d, "id")?.let { dokId[it] = e.id }; bytes?.let { sadrzaj += datoteke.dokument(e.id) to it } }
+            ).also { e -> int(d, "id")?.let { dokId[it] = e.id }; bytes?.let { dokSadrzaj[e.id] = it } }
         }
 
         val terapije = redci(root, "terapije").mapNotNull { t ->
@@ -223,7 +223,7 @@ object Kopija {
                 zalihaSet = bool(t, "zaliha_set", false), datumPocetka = datum(t, "datum_pocetka"), datumKraja = datum(t, "datum_kraja"),
                 datumPunjenja = datum(t, "datum_punjenja"), receptDo = datum(t, "recept_do"), narucenoTs = datum(t, "naruceno_ts"),
                 zadnjiDecay = datum(t, "zadnji_decay"), stvoren = datum(t, "stvoren") ?: sada, izgledOpis = str(t, "izgled_opis")
-            ).also { e -> bajtovi(t, "izgled_foto_b64")?.let { sadrzaj += datoteke.lijek(e.id) to it } }
+            ).also { e -> bajtovi(t, "izgled_foto_b64")?.let { lijekSadrzaj[e.id] = it } }
         }
         val terapijaPoId = terapije.associateBy { it.id }
 
@@ -285,6 +285,7 @@ object Kopija {
                         clanId = str(a, "clan_id_uuid"), detalj = str(a, "detalj"))
         }
 
+        datoteke.pripremi(dokSadrzaj, lijekSadrzaj)
         db.withTransaction {
             val k = db.kopijaDao()
             k.obrisiClanove(); k.obrisiNarudzbe()
@@ -294,7 +295,6 @@ object Kopija {
             k.dodajMjerenja(mjerenja); k.dodajLab(lab); k.dodajDogadjaje(dogadjaji); k.dodajCijepljenja(cijepljenja)
             k.dodajDnevnik(dnevnik); k.dodajCikluse(ciklusi); k.dodajNarudzbe(narudzbe); k.dodajStavke(stavke); k.dodajAudit(audit)
         }
-        datoteke.obrisiSve()
-        sadrzaj.forEach { (f, bytes) -> f.writeBytes(bytes) }
+        datoteke.preuzmiPripremljeno()
     }
 }
