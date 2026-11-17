@@ -1,6 +1,7 @@
 package com.mojtijek.doktor
 
 import android.app.Application
+import com.mojtijek.doktor.data.Datoteke
 import com.mojtijek.doktor.data.MojTijekDatabase
 import com.mojtijek.doktor.data.MojTijekRepository
 import com.mojtijek.shared.di.sharedModule
@@ -15,7 +16,7 @@ class DoktorApp : Application() {
     override fun onCreate() {
         super.onCreate()
         val db = MojTijekDatabase.getInstance(this)
-        repository = MojTijekRepository(db)
+        repository = MojTijekRepository(db, Datoteke(filesDir))
 
         val localModule = module {
             single { repository }

@@ -150,12 +150,50 @@ interface MenstruacijaDao {
     suspend fun delete(m: MenstruacijaEntity)
 }
 
+/** Sve za sigurnosnu kopiju: cijele tablice redom unosa, skupni upis, brisanje. */
+@Dao
+interface KopijaDao {
+    @Query("SELECT * FROM clan ORDER BY redoslijed, rowid") suspend fun clanovi(): List<ClanEntity>
+    @Query("SELECT * FROM terapija ORDER BY rowid") suspend fun terapije(): List<TerapijaEntity>
+    @Query("SELECT * FROM uzimanje ORDER BY rowid") suspend fun uzimanja(): List<UzimanjeEntity>
+    @Query("SELECT * FROM dogadjaj ORDER BY rowid") suspend fun dogadjaji(): List<DogadjajEntity>
+    @Query("SELECT * FROM dokument ORDER BY rowid") suspend fun dokumenti(): List<DokumentEntity>
+    @Query("SELECT * FROM lab_nalaz ORDER BY rowid") suspend fun lab(): List<LabNalazEntity>
+    @Query("SELECT * FROM mjerenje ORDER BY rowid") suspend fun mjerenja(): List<MjerenjeEntity>
+    @Query("SELECT * FROM cijepljenje ORDER BY rowid") suspend fun cijepljenja(): List<CijepljenjeEntity>
+    @Query("SELECT * FROM dnevnik_unos ORDER BY rowid") suspend fun dnevnik(): List<DnevnikUnosEntity>
+    @Query("SELECT * FROM menstruacija ORDER BY rowid") suspend fun ciklusi(): List<MenstruacijaEntity>
+    @Query("SELECT * FROM narudzba ORDER BY rowid") suspend fun narudzbe(): List<NarudzbaEntity>
+    @Query("SELECT * FROM narudzba_stavka ORDER BY rowid") suspend fun stavke(): List<NarudzbaStavkaEntity>
+    @Query("SELECT * FROM audit ORDER BY rowid") suspend fun audit(): List<AuditEntity>
+
+    @Insert suspend fun dodajClanove(x: List<ClanEntity>)
+    @Insert suspend fun dodajTerapije(x: List<TerapijaEntity>)
+    @Insert suspend fun dodajUzimanja(x: List<UzimanjeEntity>)
+    @Insert suspend fun dodajDogadjaje(x: List<DogadjajEntity>)
+    @Insert suspend fun dodajDokumente(x: List<DokumentEntity>)
+    @Insert suspend fun dodajLab(x: List<LabNalazEntity>)
+    @Insert suspend fun dodajMjerenja(x: List<MjerenjeEntity>)
+    @Insert suspend fun dodajCijepljenja(x: List<CijepljenjeEntity>)
+    @Insert suspend fun dodajDnevnik(x: List<DnevnikUnosEntity>)
+    @Insert suspend fun dodajCikluse(x: List<MenstruacijaEntity>)
+    @Insert suspend fun dodajNarudzbe(x: List<NarudzbaEntity>)
+    @Insert suspend fun dodajStavke(x: List<NarudzbaStavkaEntity>)
+    @Insert suspend fun dodajAudit(x: List<AuditEntity>)
+
+    /** Kaskadno briše sve što visi na članovima. */
+    @Query("DELETE FROM clan") suspend fun obrisiClanove()
+    @Query("DELETE FROM narudzba") suspend fun obrisiNarudzbe()
+    @Query("DELETE FROM audit") suspend fun obrisiAudit()
+}
+
 @Database(
     entities = [
         ClanEntity::class, TerapijaEntity::class, UzimanjeEntity::class,
         DogadjajEntity::class, DokumentEntity::class, LabNalazEntity::class,
         MjerenjeEntity::class, CijepljenjeEntity::class, DnevnikUnosEntity::class,
-        MenstruacijaEntity::class
+        MenstruacijaEntity::class,
+        NarudzbaEntity::class, NarudzbaStavkaEntity::class, AuditEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -171,6 +209,7 @@ abstract class MojTijekDatabase : RoomDatabase() {
     abstract fun cijepljenjeDao(): CijepljenjeDao
     abstract fun dnevnikDao(): DnevnikDao
     abstract fun menstruacijaDao(): MenstruacijaDao
+    abstract fun kopijaDao(): KopijaDao
 
     companion object {
         @Volatile private var INSTANCE: MojTijekDatabase? = null

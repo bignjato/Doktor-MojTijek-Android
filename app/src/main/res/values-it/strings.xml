@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="kopija_naslov">Backup</string>
+    <string name="kopija_opis">Il backup è un file che puoi ripristinare su questo o su un altro telefono, anche su iPhone. Contiene dati sanitari e non è cifrato: conservalo in un luogo sicuro.</string>
+    <string name="kopija_s_dokumentima">Includi documenti e foto</string>
+    <string name="kopija_izvezi">Salva backup</string>
+    <string name="kopija_vrati">Ripristina backup</string>
+    <string name="kopija_spremljena">Backup salvato.</string>
+    <string name="kopija_vracena">Backup ripristinato.</string>
+    <string name="kopija_nevaljana">Il backup non è valido. I dati non sono stati modificati.</string>
+    <string name="kopija_neuspjelo">Operazione non riuscita. I dati non sono stati modificati.</string>
+    <string name="kopija_vrati_naslov">Ripristinare il backup?</string>
+    <string name="kopija_vrati_upozorenje">Tutti i dati su questo dispositivo saranno SOSTITUITI con quelli del backup.\n\nNel backup: membri %1$d, terapie %2$d, documenti %3$d (con file %4$d).</string>
+    <string name="kopija_zamijeni">Sostituisci i dati</string>
+    <string name="odustani">Annulla</string>
+</resources>

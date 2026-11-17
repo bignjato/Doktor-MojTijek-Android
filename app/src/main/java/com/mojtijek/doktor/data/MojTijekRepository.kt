@@ -3,7 +3,10 @@ package com.mojtijek.doktor.data
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 
-class MojTijekRepository(private val db: MojTijekDatabase) {
+class MojTijekRepository(private val db: MojTijekDatabase, private val datoteke: Datoteke) {
+    suspend fun izveziKopiju(ukljuciDokumente: Boolean): String = Kopija.izvezi(db, datoteke, ukljuciDokumente)
+    suspend fun uveziKopiju(tekst: String) = Kopija.uvezi(db, datoteke, tekst)
+
     val clanovi: Flow<List<ClanEntity>> get() = db.clanDao().observeAll()
 
     suspend fun upsertClan(clan: ClanEntity) = db.clanDao().upsert(clan)
@@ -12,7 +15,8 @@ class MojTijekRepository(private val db: MojTijekDatabase) {
 
     fun terapijeAktivne(clanId: String): Flow<List<TerapijaEntity>> = db.terapijaDao().observeByClan(clanId)
     fun terapijeSve(clanId: String): Flow<List<TerapijaEntity>> = db.terapijaDao().observeAllByClan(clanId)
-    suspend fun upsertTerapija(t: TerapijaEntity) = db.terapijaDao().upsert(t)
+    /** Korisnikov unos/izmjena terapije: zaliha se vodi ako je upisana (kao iOS). */
+    suspend fun upsertTerapija(t: TerapijaEntity) = db.terapijaDao().upsert(t.copy(zalihaSet = t.kolicina > 0))
     suspend fun deleteTerapija(t: TerapijaEntity) = db.terapijaDao().delete(t)
 
     fun uzimanjaZaDan(clanId: String, danMillis: Long): Flow<List<UzimanjeEntity>> =
@@ -31,10 +35,8 @@ class MojTijekRepository(private val db: MojTijekDatabase) {
         val osnova = postojeci ?: UzimanjeEntity(terapijaId = t.id, clanId = t.clanId, datum = dan, slot = slot)
         db.uzimanjeDao().upsert(osnova.copy(ts = System.currentTimeMillis(), preskoceno = preskoceno,
                                             kolicina = if (preskoceno) 0.0 else t.dozaKom))
-        // shortcut: iOS troši zalihu samo uz `zalihaSet`; Android to polje još nema, pa „kolicina > 0”
-        // znači da se zaliha vodi. Zamijeniti kad shema dobije zalihaSet (paritet sigurnosne kopije).
         // Uzeta pa naknadno preskočena doza zalihu ne vraća — isto kao iOS.
-        if (!preskoceno && t.kolicina > 0) db.terapijaDao().upsert(t.copy(kolicina = maxOf(0.0, t.kolicina - t.dozaKom)))
+        if (!preskoceno && t.zalihaSet) db.terapijaDao().upsert(t.copy(kolicina = maxOf(0.0, t.kolicina - t.dozaKom)))
     }
 
     fun dogadjajiZaClana(clanId: String): Flow<List<DogadjajEntity>> = db.dogadjajDao().observeByClan(clanId)

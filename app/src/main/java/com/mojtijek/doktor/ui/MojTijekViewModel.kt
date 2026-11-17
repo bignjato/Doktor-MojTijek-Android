@@ -372,6 +372,14 @@ Odobrenje HZZO"""
     fun dodajDnevnikUnos(d: DnevnikUnosEntity) = viewModelScope.launch { repo.upsertDnevnik(d) }
     fun obrisiDnevnikUnos(d: DnevnikUnosEntity) = viewModelScope.launch { repo.deleteDnevnik(d) }
 
+    suspend fun izveziKopiju(ukljuciDokumente: Boolean): String = repo.izveziKopiju(ukljuciDokumente)
+
+    /** Zamjenjuje sve podatke; aktivni član iz stare baze više ne postoji. */
+    suspend fun uveziKopiju(tekst: String) {
+        repo.uveziKopiju(tekst)
+        _aktivniClanId.value = repo.clanovi.first().firstOrNull()?.id
+    }
+
     class Factory(private val repo: MojTijekRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T = MojTijekViewModel(repo) as T

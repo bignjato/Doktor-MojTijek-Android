@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="kopija_naslov">Sicherung</string>
+    <string name="kopija_opis">Die Sicherung ist eine Datei, die du auf diesem oder einem anderen Telefon wiederherstellen kannst, auch auf einem iPhone. Sie enthält Gesundheitsdaten und ist nicht verschlüsselt – bewahre sie sicher auf.</string>
+    <string name="kopija_s_dokumentima">Dokumente und Fotos einschließen</string>
+    <string name="kopija_izvezi">Sicherung speichern</string>
+    <string name="kopija_vrati">Sicherung wiederherstellen</string>
+    <string name="kopija_spremljena">Sicherung gespeichert.</string>
+    <string name="kopija_vracena">Sicherung wiederhergestellt.</string>
+    <string name="kopija_nevaljana">Die Sicherung ist ungültig. Deine Daten wurden nicht geändert.</string>
+    <string name="kopija_neuspjelo">Das hat nicht funktioniert. Deine Daten wurden nicht geändert.</string>
+    <string name="kopija_vrati_naslov">Sicherung wiederherstellen?</string>
+    <string name="kopija_vrati_upozorenje">Alle Daten auf diesem Gerät werden durch die Daten aus der Sicherung ERSETZT.\n\nIn der Sicherung: Mitglieder %1$d, Therapien %2$d, Dokumente %3$d (mit Datei %4$d).</string>
+    <string name="kopija_zamijeni">Daten ersetzen</string>
+    <string name="odustani">Abbrechen</string>
+</resources>
