@@ -12,7 +12,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+// Obična Application: DoktorApp bi u svakom testu ponovno pokretao Koin.
+@Config(sdk = [34], application = android.app.Application::class)
 class BazaTest {
     private val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), MojTijekDatabase::class.java)
         .allowMainThreadQueries().build()
