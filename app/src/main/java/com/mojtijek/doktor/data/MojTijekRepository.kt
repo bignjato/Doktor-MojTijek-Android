@@ -1,5 +1,6 @@
 package com.mojtijek.doktor.data
 
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 
 class MojTijekRepository(private val db: MojTijekDatabase) {
@@ -18,7 +19,23 @@ class MojTijekRepository(private val db: MojTijekDatabase) {
         db.uzimanjeDao().observeByClanAndDay(clanId, danMillis)
     fun svaUzimanjaZaClana(clanId: String): Flow<List<UzimanjeEntity>> =
         db.uzimanjeDao().observeByClan(clanId)
-    suspend fun potvrdiUzimanje(u: UzimanjeEntity) = db.uzimanjeDao().upsert(u)
+
+    /**
+     * Potvrda ili preskakanje doze (kao iOS DoseRecorder): jedan zapis po terapiji/danu/slotu,
+     * ponovljeni dodir ne upisuje duplikat i ne troši zalihu dvaput.
+     */
+    suspend fun zabiljeziDozu(terapijaId: String, slot: String, dan: Long, preskoceno: Boolean) = db.withTransaction {
+        val t = db.terapijaDao().getById(terapijaId) ?: return@withTransaction
+        val postojeci = db.uzimanjeDao().getForSlot(terapijaId, dan, slot)
+        if (postojeci != null && postojeci.preskoceno == preskoceno) return@withTransaction
+        val osnova = postojeci ?: UzimanjeEntity(terapijaId = t.id, clanId = t.clanId, datum = dan, slot = slot)
+        db.uzimanjeDao().upsert(osnova.copy(ts = System.currentTimeMillis(), preskoceno = preskoceno,
+                                            kolicina = if (preskoceno) 0.0 else t.dozaKom))
+        // shortcut: iOS troši zalihu samo uz `zalihaSet`; Android to polje još nema, pa „kolicina > 0”
+        // znači da se zaliha vodi. Zamijeniti kad shema dobije zalihaSet (paritet sigurnosne kopije).
+        // Uzeta pa naknadno preskočena doza zalihu ne vraća — isto kao iOS.
+        if (!preskoceno && t.kolicina > 0) db.terapijaDao().upsert(t.copy(kolicina = maxOf(0.0, t.kolicina - t.dozaKom)))
+    }
 
     fun dogadjajiZaClana(clanId: String): Flow<List<DogadjajEntity>> = db.dogadjajDao().observeByClan(clanId)
     fun nadolazeciDogadjaji(fromMillis: Long): Flow<List<DogadjajEntity>> = db.dogadjajDao().observeUpcoming(fromMillis)

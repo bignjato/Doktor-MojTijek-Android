@@ -17,7 +17,7 @@ class ApiClient {
             })
         }
         install(Logging) {
-            level = LogLevel.BODY
+            level = LogLevel.NONE   // nikad BODY: tijelo zahtjeva su zdravstveni podaci
         }
         engine {
             connectTimeout = 15_000

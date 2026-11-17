@@ -25,7 +25,7 @@ val sharedModule = module {
             }
             install(Logging) {
                 logger = Logger.ANDROID
-                level = LogLevel.BODY
+                level = LogLevel.NONE   // nikad BODY: tijelo zahtjeva su zdravstveni podaci
             }
             install(HttpTimeout) {
                 requestTimeoutMillis = 30_000
