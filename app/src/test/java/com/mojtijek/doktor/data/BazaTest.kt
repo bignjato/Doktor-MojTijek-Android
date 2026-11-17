@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -56,6 +57,34 @@ class BazaTest {
         assertEquals(0.0, prazna.kolicina, 0.0)
         assertEquals(0.0, DoseSchedule.danaPreostalo(prazna)!!, 0.0)
         assertEquals(null, DoseSchedule.danaPreostalo(TerapijaEntity(clanId = clan.id, naziv = "Bez zalihe", vremena = "08:00")))
+    }
+
+    /** Pravila početnog ekrana (iOS homeDoses / dueToday). */
+    @Test fun pocetniEkranNudiOtvoreneDoze() {
+        val t = TerapijaEntity(clanId = "c", naziv = "A", vremena = "08:00,20:00")
+        val podne = dan + 12 * 3_600_000L
+        assertEquals(listOf("08:00", "20:00"), DoseSchedule.homeDoses(listOf(t), emptyList(), podne).map { it.slot })
+        assertEquals("buduća doza ne ulazi u „Uzeto sve”", listOf("08:00"), DoseSchedule.dueToday(listOf(t), emptyList(), podne).map { it.slot })
+
+        // Uzeta i preskočena doza su obje riješene; tada se nudi samo prva sutrašnja.
+        val rijeseno = listOf(UzimanjeEntity(terapijaId = t.id, clanId = "c", datum = dan, slot = "08:00"),
+                              UzimanjeEntity(terapijaId = t.id, clanId = "c", datum = dan, slot = "20:00", preskoceno = true))
+        val sutra = DoseSchedule.homeDoses(listOf(t), rijeseno, podne).single()
+        assertEquals("08:00", sutra.slot)
+        assertTrue(sutra.plannedMillis > dan + 20 * 3_600_000L)
+        assertTrue(DoseSchedule.dueToday(listOf(t), rijeseno, podne).isEmpty())
+
+        // Bez upisanih vremena vrijede zadana prema broju doza dnevno.
+        assertEquals(listOf("08:00", "14:00", "20:00"), DoseSchedule.effectiveSlots(TerapijaEntity(clanId = "c", naziv = "B", putaDnevno = 3)))
+    }
+
+    @Test fun priKrajuPoPraguINarudzbi() {
+        val t = TerapijaEntity(clanId = "c", naziv = "A", vremena = "08:00", kolicina = 3.0, zalihaSet = true)
+        assertTrue(DoseSchedule.trebaNaruciti(t))
+        assertEquals(false, DoseSchedule.trebaNaruciti(t.copy(kolicina = 4.0)))
+        assertEquals(true, DoseSchedule.trebaNaruciti(t.copy(kolicina = 4.0, pragDana = 7)))
+        assertEquals("već naručeno", false, DoseSchedule.trebaNaruciti(t.copy(narucenoTs = 1L)))
+        assertEquals("zaliha se ne vodi", false, DoseSchedule.trebaNaruciti(t.copy(zalihaSet = false)))
     }
 
     @Test fun rasporedPostujeTjedniDan() {

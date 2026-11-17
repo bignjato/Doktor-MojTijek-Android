@@ -39,8 +39,17 @@ object DoseSchedule {
         return true
     }
 
+    /** Bez upisanih vremena vrijede zadana prema broju doza dnevno (kao iOS). */
     fun effectiveSlots(terapija: TerapijaEntity): List<String> =
-        parse(terapija.vremena) ?: emptyList()
+        parse(terapija.vremena)?.takeIf { it.isNotEmpty() } ?: zadanaVremena(terapija.putaDnevno)
+
+    fun zadanaVremena(putaDnevno: Int): List<String> = when (maxOf(1, putaDnevno)) {
+        1 -> listOf("08:00")
+        2 -> listOf("08:00", "20:00")
+        3 -> listOf("08:00", "14:00", "20:00")
+        4 -> listOf("08:00", "12:00", "16:00", "20:00")
+        else -> { val n = minOf(putaDnevno, 6); (0 until n).map { String.format(Locale.US, "%02d:00", 8 + it * (12 / maxOf(1, n - 1))) } }
+    }
 
     private fun startOfDay(ts: Long): Long {
         val c = Calendar.getInstance(); c.timeInMillis = ts
@@ -72,11 +81,37 @@ object DoseSchedule {
                 val parts = slot.split(":")
                 val h = parts[0].toInt(); val m = parts[1].toInt()
                 val dose = Calendar.getInstance(); dose.timeInMillis = danMillis
-                dose.set(Calendar.HOUR_OF_DAY, h); dose.set(Calendar.MINUTE, m); dose.set(Calendar.SECOND, 0)
+                dose.set(Calendar.HOUR_OF_DAY, h); dose.set(Calendar.MINUTE, m); dose.set(Calendar.SECOND, 0); dose.set(Calendar.MILLISECOND, 0)
                 doses.add(ScheduledDose(t, slot, dose.timeInMillis))
             }
         }
         return doses.sortedWith(compareBy({ it.plannedMillis }, { it.terapija.naziv }))
+    }
+
+    /** Zapis (uzeto ili preskočeno) za dozu, ako postoji. */
+    fun zapis(doza: ScheduledDose, uzimanja: List<UzimanjeEntity>): UzimanjeEntity? {
+        val dan = dayStart(doza.plannedMillis)
+        return uzimanja.firstOrNull { it.terapijaId == doza.terapija.id && it.slot == doza.slot && dayStart(it.datum ?: it.ts) == dan }
+    }
+
+    /** Početni ekran: sve nepotvrđene današnje doze; kad ih nema, prva sljedeća u idućih tjedan dana. */
+    fun homeDoses(terapije: List<TerapijaEntity>, uzimanja: List<UzimanjeEntity>, sada: Long): List<ScheduledDose> {
+        for (pomak in 0..7) {
+            val dan = Calendar.getInstance().apply { timeInMillis = sada; add(Calendar.DAY_OF_YEAR, pomak) }.timeInMillis
+            val otvorene = entriesForDay(terapije, dan).filter { zapis(it, uzimanja) == null }
+            if (otvorene.isNotEmpty()) return if (pomak == 0) otvorene else otvorene.take(1)
+        }
+        return emptyList()
+    }
+
+    /** „Uzeto sve” nikad ne uključuje buduće doze ni doze drugog dana. */
+    fun dueToday(terapije: List<TerapijaEntity>, uzimanja: List<UzimanjeEntity>, sada: Long): List<ScheduledDose> =
+        entriesForDay(terapije, sada).filter { zapis(it, uzimanja) == null && it.plannedMillis <= sada }
+
+    /** Pri kraju je (zaliha ≤ prag, zadano 3 dana) i nije već označeno kao naručeno. */
+    fun trebaNaruciti(t: TerapijaEntity): Boolean {
+        val dana = danaPreostalo(t) ?: return false
+        return t.narucenoTs == null && dana <= (t.pragDana ?: 3)
     }
 
     /** Broj dana zaliha preostalo, po iOS logici: kolicina / (dozaKom * putaDnevno po tjednu). */

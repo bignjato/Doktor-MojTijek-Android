@@ -159,7 +159,7 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
         
         val tlak = MjerenjeEntity(
             clanId = ana.id,
-            tip = "krvni tlak",
+            tip = "tlak",
             vrijednost = 125.0,
             vrijednost2 = 71.0,
             jedinica = "mmHg",
@@ -169,7 +169,7 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
         
         val secer = MjerenjeEntity(
             clanId = ana.id,
-            tip = "šećer",
+            tip = "secer",
             vrijednost = 5.2,
             jedinica = "mmol/L",
             ts = System.currentTimeMillis() - (4L * 60 * 60 * 1000)
@@ -187,7 +187,7 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
         
         val tezina = MjerenjeEntity(
             clanId = ana.id,
-            tip = "težina",
+            tip = "tezina",
             vrijednost = 68.5,
             jedinica = "kg",
             ts = System.currentTimeMillis() - (12L * 60 * 60 * 1000)
@@ -335,8 +335,13 @@ Odobrenje HZZO"""
     fun svaUzimanja(): Flow<List<UzimanjeEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.svaUzimanjaZaClana(id) }
 
-    fun potvrdiDozu(terapija: TerapijaEntity, slot: String) = viewModelScope.launch {
-        repo.zabiljeziDozu(terapija.id, slot, DoseSchedule.dayStart(), preskoceno = false)
+    /** @param planirano planirani trenutak doze — dan zapisa je njezin dan, ne nužno današnji. */
+    fun potvrdiDozu(terapija: TerapijaEntity, slot: String, planirano: Long = System.currentTimeMillis()) = viewModelScope.launch {
+        repo.zabiljeziDozu(terapija.id, slot, DoseSchedule.dayStart(planirano), preskoceno = false)
+    }
+
+    fun potvrdiDoze(doze: List<DoseSchedule.ScheduledDose>) = viewModelScope.launch {
+        doze.forEach { repo.zabiljeziDozu(it.terapija.id, it.slot, DoseSchedule.dayStart(it.plannedMillis), preskoceno = false) }
     }
 
     fun preskociDozu(terapija: TerapijaEntity, slot: String) = viewModelScope.launch {

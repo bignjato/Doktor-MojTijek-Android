@@ -14,11 +14,13 @@ import androidx.compose.ui.unit.dp
 import com.mojtijek.doktor.data.MjerenjeEntity
 import com.mojtijek.doktor.ui.MojTijekViewModel
 import com.mojtijek.doktor.ui.components.ChartDataPoint
+import com.mojtijek.doktor.ui.components.VITALI
+import com.mojtijek.doktor.ui.components.vitalNaziv
 import com.mojtijek.doktor.ui.components.SimpleLineChart
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val TIPOVI = listOf("koraci", "krvni tlak", "puls", "šećer", "težina", "temperatura")
+private val TIPOVI = listOf("koraci", "tlak", "puls", "secer", "tezina", "temperatura")
 
 enum class PracenjeTab { MJERENJA, TRENDOVI, LABORATORIJ }
 
@@ -33,7 +35,7 @@ fun PracenjeScreen(vm: MojTijekViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showDialog = true },
-                modifier = Modifier.padding(bottom = 80.dp)
+                modifier = Modifier
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Novo mjerenje")
             }
@@ -105,7 +107,7 @@ private fun MjerenjeCard(m: MjerenjeEntity, onDelete: (MjerenjeEntity) -> Unit) 
         ) {
             Column(Modifier.weight(1f)) {
                 val vrijednostText = if (m.vrijednost2 != null) "${m.vrijednost.toInt()}/${m.vrijednost2!!.toInt()}" else "${m.vrijednost}"
-                Text("${m.tip}: $vrijednostText ${m.jedinica ?: ""}", fontWeight = FontWeight.SemiBold)
+                Text("${vitalNaziv(m.tip)}: $vrijednostText ${m.jedinica ?: ""}", fontWeight = FontWeight.SemiBold)
                 Text(
                     SimpleDateFormat("d. MMM yyyy. HH:mm", Locale("hr", "HR")).format(Date(m.ts)),
                     style = MaterialTheme.typography.bodySmall,
@@ -119,7 +121,7 @@ private fun MjerenjeCard(m: MjerenjeEntity, onDelete: (MjerenjeEntity) -> Unit) 
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun NovoMjerenjeDialog(clanId: String, onDismiss: () -> Unit, onSpremi: (MjerenjeEntity) -> Unit) {
+internal fun NovoMjerenjeDialog(clanId: String, onDismiss: () -> Unit, onSpremi: (MjerenjeEntity) -> Unit) {
     var tip by remember { mutableStateOf(TIPOVI.first()) }
     var vrijednost by remember { mutableStateOf("") }
     var vrijednost2 by remember { mutableStateOf("") }
@@ -133,13 +135,13 @@ private fun NovoMjerenjeDialog(clanId: String, onDismiss: () -> Unit, onSpremi: 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
                     OutlinedTextField(
-                        value = tip, onValueChange = {}, readOnly = true,
+                        value = vitalNaziv(tip), onValueChange = {}, readOnly = true,
                         label = { Text("Tip mjerenja") },
                         modifier = Modifier.menuAnchor()
                     )
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         TIPOVI.forEach { t ->
-                            DropdownMenuItem(text = { Text(t) }, onClick = { tip = t; expanded = false })
+                            DropdownMenuItem(text = { Text(vitalNaziv(t)) }, onClick = { tip = t; expanded = false })
                         }
                     }
                 }
@@ -158,7 +160,7 @@ private fun NovoMjerenjeDialog(clanId: String, onDismiss: () -> Unit, onSpremi: 
                         MjerenjeEntity(
                             clanId = clanId, tip = tip, vrijednost = v,
                             vrijednost2 = vrijednost2.toDoubleOrNull(),
-                            jedinica = jedinica.ifBlank { null }
+                            jedinica = jedinica.ifBlank { VITALI[tip]?.jedinica?.ifBlank { null } }
                         )
                     )
                 }
@@ -233,7 +235,7 @@ private fun TrendCard(tip: String, mjerenja: List<MjerenjeEntity>) {
     ) {
         Column(Modifier.padding(20.dp)) {
             Text(
-                tip.replaceFirstChar { it.uppercase() },
+                vitalNaziv(tip),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
