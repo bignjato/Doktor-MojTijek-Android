@@ -27,6 +27,22 @@ Stanje grane `android-1.0` na dan 2026-11-17. „Ekran” = postoji unos/pregled
 | Widget | da | **ne** | |
 | Testovi | 87 | 3 | |
 
+## Izgled (mora biti jednak iOS-u)
+
+Boje, tema (svijetla/tamna prema sustavu), oblik kartica i traka tabova preneseni su s iOS-a
+(`ui/theme`, `ui/components/Mt.kt`). Ekrani se usklađuju jedan po jedan prema iOS pogledu:
+
+| Ekran | Stanje |
+|---|---|
+| Danas (Moj dan) | usklađen; nedostaje: Odgodi, kratki opis lijeka, Uputnica/bolnica, ekran narudžbe, ICE, nalazi koji čekaju potvrdu |
+| Terapije | nije |
+| Nalazi / Kartoteka | nije |
+| Praćenje | nije (ključevi pokazatelja jesu: `tlak`, `secer`, `tezina`… kao iOS) |
+| Profil | nije |
+| Kalendar, Dnevnik | nije |
+
+Usporedba je zasad po kodu; snimke ekrana u CI-ju još ne postoje.
+
 ## Redoslijed do Android 1.0
 
 1. **Temelji** (ovaj PR): gubitak podataka pri uređivanju, potvrda doze, privatnost, testovi u CI-ju.

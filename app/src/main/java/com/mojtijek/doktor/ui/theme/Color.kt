@@ -1,14 +1,21 @@
 package com.mojtijek.doktor.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
-// iOS MojTijek dark theme colors
-val TealPrimary = Color(0xFF4ECDC4) // Teal/cyan accent from iOS
-val TealDark = Color(0xFF3DB8AF)
-val TealLight = Color(0xFF6EDFD8)
+/** Boje MojTijeka — iste vrijednosti kao iOS `Theme.swift` (mtTeal, mtInk…). */
+object Mt {
+    val Teal = Color(0xFF0E9488)
+    val TealDark = Color(0xFF0F766E)
+    val Green = Color(0xFF16A34A)
+    val Red = Color(0xFFEF4444)
+    val Purple = Color(0xFF8B5CF6)
+    val Blue = Color(0xFF0EA5E9)
+    val Orange = Color(0xFFF59E0B)
 
-val DarkBackground = Color(0xFF0A0E13) // Near-black
-val DarkSurface = Color(0xFF1A1F26) // Dark grey cards
-val DarkSurfaceVariant = Color(0xFF242930) // Slightly lighter
-val DarkOnSurface = Color(0xFFE8EAED) // White text
-val DarkOnSurfaceVariant = Color(0xFF9BA1A6) // Grey text
+    /** Tinta za naslove i vrijednosti (mtInk). */
+    val ink: Color
+        @Composable @ReadOnlyComposable get() = if (isSystemInDarkTheme()) Color(0xFFEAF0F4) else Color(0xFF17324A)
+}

@@ -122,7 +122,7 @@ object Kopija {
             "terapije" to niz(k.terapije()) { t -> obj(
                 "clan_id" to cId[t.clanId], "uid" to t.id, "naziv" to t.naziv, "jacina" to t.jacina, "oblik" to t.oblik, "atc" to t.atc,
                 "doza_kom" to t.dozaKom, "puta_dnevno" to t.putaDnevno,
-                "vremena" to JSONArray(DoseSchedule.effectiveSlots(t)).toString(), "dan_u_tjednu" to t.danUTjednu,
+                "vremena" to JSONArray(DoseSchedule.parse(t.vremena) ?: emptyList<String>()).toString(), "dan_u_tjednu" to t.danUTjednu,
                 "kom_po_kutiji" to t.komPoKutiji, "kolicina" to t.kolicina, "prag_dana" to t.pragDana, "trajni" to b(t.trajni),
                 "razlog" to t.razlog, "napomena" to t.napomena, "opis" to t.opis, "aktivna" to b(t.aktivna),
                 "auto_rezim" to b(t.autoRezim), "zaliha_set" to b(t.zalihaSet), "datum_pocetka" to dan(t.datumPocetka),

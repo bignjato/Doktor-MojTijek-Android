@@ -34,7 +34,7 @@ fun IzvjestajiScreen(vm: MojTijekViewModel) {
                 onClick = { showDialog = true },
                 shape = RoundedCornerShape(28.dp),
                 containerColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 80.dp)
+                modifier = Modifier
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Dodaj dokument")
             }
