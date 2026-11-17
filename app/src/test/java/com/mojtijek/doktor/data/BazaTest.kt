@@ -17,7 +17,7 @@ import org.robolectric.annotation.Config
 class BazaTest {
     private val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), MojTijekDatabase::class.java)
         .allowMainThreadQueries().build()
-    private val repo = MojTijekRepository(db)
+    private val repo = MojTijekRepository(db, Datoteke(java.nio.file.Files.createTempDirectory("mt").toFile()))
     private val dan = DoseSchedule.dayStart()
 
     @After fun zatvori() = db.close()
@@ -49,6 +49,13 @@ class BazaTest {
         assertEquals(1, zapisi.size)
         assertEquals(false, zapisi[0].preskoceno)
         assertEquals(8.0, db.terapijaDao().getById(t.id)!!.kolicina, 0.0)
+
+        // Potrošena zaliha je „0 dana”, ne „zaliha se ne prati”.
+        (1..4).forEach { repo.zabiljeziDozu(t.id, "08:00", dan - it * 86_400_000L, preskoceno = false) }
+        val prazna = db.terapijaDao().getById(t.id)!!
+        assertEquals(0.0, prazna.kolicina, 0.0)
+        assertEquals(0.0, DoseSchedule.danaPreostalo(prazna)!!, 0.0)
+        assertEquals(null, DoseSchedule.danaPreostalo(TerapijaEntity(clanId = clan.id, naziv = "Bez zalihe", vremena = "08:00")))
     }
 
     @Test fun rasporedPostujeTjedniDan() {

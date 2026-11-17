@@ -81,7 +81,7 @@ object DoseSchedule {
 
     /** Broj dana zaliha preostalo, po iOS logici: kolicina / (dozaKom * putaDnevno po tjednu). */
     fun danaPreostalo(terapija: TerapijaEntity): Double? {
-        if (terapija.kolicina <= 0) return null
+        if (!terapija.zalihaSet) return null
         val slotsPerDay = if (terapija.danUTjednu != null) {
             terapija.effectiveSlotsCount() / 7.0
         } else {

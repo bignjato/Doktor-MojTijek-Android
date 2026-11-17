@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MojTijek</string>
+    <string name="kopija_naslov">Sigurnosna kopija</string>
+    <string name="kopija_opis">Kopija je datoteka koju možeš vratiti na ovom ili drugom telefonu, i na iPhoneu. Sadrži zdravstvene podatke i nije šifrirana — čuvaj je na sigurnom.</string>
+    <string name="kopija_s_dokumentima">Uključi dokumente i fotografije</string>
+    <string name="kopija_izvezi">Spremi kopiju</string>
+    <string name="kopija_vrati">Vrati kopiju</string>
+    <string name="kopija_spremljena">Sigurnosna kopija je spremljena.</string>
+    <string name="kopija_vracena">Kopija je vraćena.</string>
+    <string name="kopija_nevaljana">Kopija nije valjana. Podaci nisu promijenjeni.</string>
+    <string name="kopija_neuspjelo">Nije uspjelo. Podaci nisu promijenjeni.</string>
+    <string name="kopija_vrati_naslov">Vratiti kopiju?</string>
+    <string name="kopija_vrati_upozorenje">Svi podaci na ovom uređaju bit će ZAMIJENJENI podacima iz kopije.\n\nU kopiji: članova %1$d, terapija %2$d, dokumenata %3$d (s datotekom %4$d).</string>
+    <string name="kopija_zamijeni">Zamijeni podatke</string>
+    <string name="odustani">Odustani</string>
 </resources>

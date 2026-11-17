@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="kopija_naslov">Backup</string>
+    <string name="kopija_opis">A backup is a file you can restore on this or another phone, including an iPhone. It contains health data and is not encrypted — keep it somewhere safe.</string>
+    <string name="kopija_s_dokumentima">Include documents and photos</string>
+    <string name="kopija_izvezi">Save backup</string>
+    <string name="kopija_vrati">Restore backup</string>
+    <string name="kopija_spremljena">Backup saved.</string>
+    <string name="kopija_vracena">Backup restored.</string>
+    <string name="kopija_nevaljana">The backup is not valid. Your data was not changed.</string>
+    <string name="kopija_neuspjelo">That did not work. Your data was not changed.</string>
+    <string name="kopija_vrati_naslov">Restore backup?</string>
+    <string name="kopija_vrati_upozorenje">All data on this device will be REPLACED with the data from the backup.\n\nIn the backup: members %1$d, therapies %2$d, documents %3$d (with file %4$d).</string>
+    <string name="kopija_zamijeni">Replace data</string>
+    <string name="odustani">Cancel</string>
+</resources>

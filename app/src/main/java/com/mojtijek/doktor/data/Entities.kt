@@ -33,7 +33,10 @@ data class ClanEntity(
     val zadnjiGinekoloski: Long? = null,
     val prosjecniCiklus: Int? = null,
     val trudna: Boolean = false,
-    val terminPorod: Long? = null
+    val terminPorod: Long? = null,
+    // Android ih ne koristi, ali ih kopija s iOS-a/weba nosi — bez njih bi ih povratak na iOS izgubio.
+    val zadnjiIngest: Long? = null,
+    val tijeloAnaliza: String? = null
 )
 
 @Entity(
@@ -71,7 +74,12 @@ data class TerapijaEntity(
     val datumPunjenja: Long? = null,
     val narucenoTs: Long? = null,
     val receptDo: Long? = null,
-    val stvoren: Long = System.currentTimeMillis()
+    val stvoren: Long = System.currentTimeMillis(),
+    /** Zaliha se vodi (korisnik ju je upisao). Uz 0 komada i dalje znači „nema više”, ne „ne prati se”. */
+    val zalihaSet: Boolean = false,
+    val zadnjiDecay: Long? = null,
+    /** Kratki opis izgleda lijeka; fotografija je datoteka (Datoteke.lijek). */
+    val izgledOpis: String? = null
 )
 
 @Entity(
@@ -115,7 +123,12 @@ data class DogadjajEntity(
     val status: String = "planirano",
     val podsjetnikDana: Int = 3,
     val napomena: String? = null,
-    val vozac: String? = null
+    val vozac: String? = null,
+    val vozacEmail: String? = null,
+    val vozacObavijesten: Boolean = false,
+    val uputnicaZatrazenaTs: Long? = null,
+    val dokumentId: String? = null,
+    val ekEventId: String? = null   // događaj u Kalendaru iPhonea; ovdje samo putuje kroz kopiju
 )
 
 @Entity(
@@ -134,7 +147,15 @@ data class DokumentEntity(
     val napomena: String? = null,
     val objasnjenje: String? = null,
     val poslanoDoktoru: Boolean = false,
-    val stvoren: Long = System.currentTimeMillis()
+    val stvoren: Long = System.currentTimeMillis(),
+    // Sam dokument (PDF/slika) je datoteka (Datoteke.dokument), ne stupac: redak u SQLiteu ne smije nositi megabajte.
+    val origIme: String? = null,
+    val mime: String? = null,
+    val velicina: Int? = null,
+    val obrada: String? = null,
+    val obradaFaza: String? = null,
+    val obradaInfo: String? = null,
+    val poslanoTs: Long? = null
 )
 
 @Entity(
@@ -173,7 +194,8 @@ data class MjerenjeEntity(
     val jedinica: String? = null,
     val ts: Long = System.currentTimeMillis(),
     val napomena: String? = null,
-    val izvor: String = "rucno"
+    val izvor: String = "rucno",
+    val datum: Long? = null
 )
 
 @Entity(
@@ -221,4 +243,49 @@ data class MenstruacijaEntity(
     val raspolozenje: Int? = null,
     val simptomi: String? = null,
     val napomena: String? = null
+)
+
+@Entity(tableName = "narudzba")
+data class NarudzbaEntity(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val created: Long = System.currentTimeMillis(),
+    val status: String = "nacrt",
+    val primateljEmail: String? = null,
+    val poslaoTko: String? = null,
+    val poslanoTs: Long? = null,
+    val napomena: String? = null,
+    val greska: String? = null,
+    val provedeno: Boolean = false,
+    val provedenoTs: Long? = null,
+    val provedenoOd: String? = null,
+    val pixelToken: String? = null,
+    val otvorenoTs: Long? = null,
+    val potvrdenoTs: Long? = null
+)
+
+@Entity(
+    tableName = "narudzba_stavka",
+    foreignKeys = [ForeignKey(entity = NarudzbaEntity::class, parentColumns = ["id"], childColumns = ["narudzbaId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("narudzbaId")]
+)
+data class NarudzbaStavkaEntity(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val narudzbaId: String,
+    val clanIme: String? = null,
+    val naziv: String = "",
+    val jacina: String? = null,
+    val kolicinaKutija: Int = 1,
+    val danaPreostalo: Double? = null,
+    val terapijaRef: String? = null
+)
+
+/** Povijest promjena (iOS AuditEvent). */
+@Entity(tableName = "audit")
+data class AuditEntity(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val ts: Long = System.currentTimeMillis(),
+    val akcija: String = "",
+    val objekt: String = "",
+    val clanId: String? = null,
+    val detalj: String? = null
 )
