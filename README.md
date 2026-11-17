@@ -27,10 +27,9 @@ shared/       — Android library s poslovnom logikom
 
 ## CI/CD
 
-- GitHub Actions gradi APK na svaki push na `main`
-- APK se uploaduje kao GitHub Release artifact
-- SHA-256 checksum u release notes
-- Link: `https://doktor.infobot.hr/mojtijek.apk` (preusmjerava na APK)
+- Razvoj ide na grani `android-1.0` (feature grana + PR); GitHub Actions na svakom PR-u gradi debug APK i vrti testove.
+- U Android Studiju: checkout `android-1.0`, *Pull*, konfiguracija **app**, *Run*.
+- `main` objavljuje APK kao GitHub Release na svaki push — u `main` se mergea tek kad je verzija za objavu.
 
 ## Sinkronizacija s iOS
 

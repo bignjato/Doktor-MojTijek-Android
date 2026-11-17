@@ -32,7 +32,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mojtijek.doktor.R
 import com.mojtijek.doktor.ui.home.HomeScreen
-import com.mojtijek.doktor.ui.izvjestaji.IzvjestajiScreen
+import com.mojtijek.doktor.ui.nalazi.NalaziScreen
 import com.mojtijek.doktor.ui.pracenje.PracenjeScreen
 import com.mojtijek.doktor.ui.profil.ProfilScreen
 import com.mojtijek.doktor.ui.terapije.TerapijeScreen
@@ -92,11 +92,11 @@ fun MojTijekApp(vm: MojTijekViewModel) {
                 )
             }
             composable("terapije") { TerapijeScreen(vm) }
-            composable("nalazi") { IzvjestajiScreen(vm) }
+            composable("nalazi") { NalaziScreen(vm) }
             composable("pracenje") { PracenjeScreen(vm) }
             composable("profil") { ProfilScreen(vm) }
             composable("dnevnik") { com.mojtijek.doktor.ui.dnevnik.DnevnikScreen(vm = vm, onNavigateBack = { nav.popBackStack() }) }
-            composable("kartoteka") { com.mojtijek.doktor.ui.dokumenti.DokumentiScreen(vm = vm, onNavigateBack = { nav.popBackStack() }) }
+            composable("kartoteka") { NalaziScreen(vm, onNavigateBack = { nav.popBackStack() }) }
             composable("kalendar") { com.mojtijek.doktor.ui.kalendar.KalendarScreen(vm = vm, onNavigateBack = { nav.popBackStack() }) }
         }
     }

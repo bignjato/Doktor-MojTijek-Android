@@ -1,7 +1,10 @@
 package com.mojtijek.doktor.data
 
 import androidx.room.withTransaction
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 class MojTijekRepository(private val db: MojTijekDatabase, private val datoteke: Datoteke) {
     suspend fun izveziKopiju(ukljuciDokumente: Boolean): String = Kopija.izvezi(db, datoteke, ukljuciDokumente)
@@ -94,7 +97,26 @@ class MojTijekRepository(private val db: MojTijekDatabase, private val datoteke:
 
     fun dokumentiZaClana(clanId: String): Flow<List<DokumentEntity>> = db.dokumentDao().observeByClan(clanId)
     suspend fun upsertDokument(d: DokumentEntity) = db.dokumentDao().upsert(d)
-    suspend fun deleteDokument(d: DokumentEntity) = db.dokumentDao().delete(d)
+    /** Briše zapis i samu datoteku — dokument ne smije ostati na disku nakon brisanja. */
+    suspend fun deleteDokument(d: DokumentEntity) {
+        db.dokumentDao().delete(d)
+        datoteke.dokument(d.id).delete()
+    }
+
+    fun dokumentDatoteka(id: String): java.io.File = datoteke.dokument(id)
+
+    /** Novi dokument u kartoteci (iOS saveDocument). Isti sadržaj kod istog člana se ne dodaje ponovno → false. */
+    suspend fun spremiDokument(clanId: String, bajtovi: ByteArray, mime: String, ime: String): Boolean = withContext(Dispatchers.IO) {
+        val vecPostoji = db.dokumentDao().observeByClan(clanId).first().any { p ->
+            p.velicina == bajtovi.size && datoteke.dokument(p.id).let { it.exists() && it.readBytes().contentEquals(bajtovi) }
+        }
+        if (vecPostoji) return@withContext false
+        val d = DokumentEntity(clanId = clanId, vrsta = "nalaz", naziv = ime, origIme = ime, mime = mime, velicina = bajtovi.size,
+                               datum = System.currentTimeMillis(), obradaFaza = "ceka")
+        datoteke.dokument(d.id).writeBytes(bajtovi)
+        db.dokumentDao().upsert(d)
+        true
+    }
 
     fun labZaClana(clanId: String): Flow<List<LabNalazEntity>> = db.labNalazDao().observeByClan(clanId)
     suspend fun upsertLab(l: LabNalazEntity) = db.labNalazDao().upsert(l)
