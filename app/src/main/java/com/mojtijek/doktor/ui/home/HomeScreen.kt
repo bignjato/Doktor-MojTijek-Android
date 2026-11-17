@@ -80,6 +80,7 @@ import com.mojtijek.doktor.data.TerapijaEntity
 import com.mojtijek.doktor.ui.MojTijekViewModel
 import com.mojtijek.doktor.ui.components.MemberAvatar
 import com.mojtijek.doktor.ui.components.MtCard
+import com.mojtijek.doktor.ui.components.ObiteljSheet
 import com.mojtijek.doktor.ui.components.Pill
 import com.mojtijek.doktor.ui.components.PotvrdiDozuDialog
 import com.mojtijek.doktor.ui.components.VITALI
@@ -161,24 +162,7 @@ fun HomeScreen(
              modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
     }
 
-    if (obitelj) {
-        ModalBottomSheet(onDismissRequest = { obitelj = false }) {
-            Column(Modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
-                Text(stringResource(R.string.obitelj), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                clanovi.forEach { c ->
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { vm.odaberiClana(c.id); obitelj = false }
-                            .padding(vertical = 10.dp, horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MemberAvatar(c, 40.dp)
-                        Text(c.ime, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        if (c.id == clan.id) Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-            }
-        }
-    }
+    if (obitelj) ObiteljSheet(clanovi, clan.id, onOdabir = { vm.odaberiClana(it) }, onZatvori = { obitelj = false })
     if (novoMjerenje) {
         NovoMjerenjeDialog(clanId = clan.id, onDismiss = { novoMjerenje = false },
                            onSpremi = { vm.dodajMjerenje(it); novoMjerenje = false })

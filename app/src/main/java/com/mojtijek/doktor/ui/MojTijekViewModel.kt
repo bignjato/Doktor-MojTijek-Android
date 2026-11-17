@@ -366,6 +366,8 @@ Odobrenje HZZO"""
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.dokumentiZaClana(id) }
     fun dodajDokument(d: DokumentEntity) = viewModelScope.launch { repo.upsertDokument(d) }
     fun obrisiDokument(d: DokumentEntity) = viewModelScope.launch { repo.deleteDokument(d) }
+    fun dokumentDatoteka(id: String) = repo.dokumentDatoteka(id)
+    suspend fun spremiDokument(clanId: String, bajtovi: ByteArray, mime: String, ime: String): Boolean = repo.spremiDokument(clanId, bajtovi, mime, ime)
 
     fun labZaAktivnog(): Flow<List<LabNalazEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.labZaClana(id) }

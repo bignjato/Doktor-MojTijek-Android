@@ -94,6 +94,21 @@ class BazaTest {
         repo.preskociDozu(t.id, "08:00", dan); assertTrue("ponovno preskakanje poništava", zapisi().isEmpty())
     }
 
+    /** Dokument: isti sadržaj se ne dodaje dvaput; brisanje miče i datoteku s diska. */
+    @Test fun dokumentBezDuplikataIBrisanjeDatoteke() = runBlocking {
+        val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
+        val pdf = byteArrayOf(1, 2, 3, 4)
+        assertTrue(repo.spremiDokument(clan.id, pdf, "application/pdf", "nalaz.pdf"))
+        assertEquals("isti sadržaj", false, repo.spremiDokument(clan.id, pdf.copyOf(), "application/pdf", "drugo-ime.pdf"))
+        assertTrue("ista veličina, drugi sadržaj", repo.spremiDokument(clan.id, byteArrayOf(1, 2, 3, 5), "application/pdf", "b.pdf"))
+        val d = repo.dokumentiZaClana(clan.id).first().first { it.naziv == "nalaz.pdf" }
+        assertEquals("ceka", d.obradaFaza); assertEquals(4, d.velicina)
+        assertTrue(repo.dokumentDatoteka(d.id).readBytes().contentEquals(pdf))
+        repo.deleteDokument(d)
+        assertEquals(false, repo.dokumentDatoteka(d.id).exists())
+        assertEquals(1, repo.dokumentiZaClana(clan.id).first().size)
+    }
+
     @Test fun napuniINaruceno() = runBlocking {
         val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
         val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00", kolicina = 2.0, komPoKutiji = 28.0); repo.upsertTerapija(t)
