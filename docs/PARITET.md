@@ -38,7 +38,7 @@ Boje, tema (svijetla/tamna prema sustavu), oblik kartica i traka tabova prenesen
 | Terapije | usklađen; nedostaje: Pametna terapija, skeniranje kutije, AI opis lijeka |
 | Nalazi / Kartoteka | usklađen; nedostaje: Skeniraj, Portal zdravlja, slanje, AI čitanje |
 | Praćenje | usklađen; nedostaje: Žensko zdravlje, povlačenje za osvježavanje |
-| Profil | nije |
+| Profil | usklađen; izbor teme i jezika; prikazuju se samo redci iza kojih postoji ekran; uređivanje člana još je stari ekran |
 | Kalendar, Dnevnik | nije |
 
 Usporedba je zasad po kodu; snimke ekrana u CI-ju još ne postoje.

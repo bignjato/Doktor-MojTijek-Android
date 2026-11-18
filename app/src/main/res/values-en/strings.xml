@@ -210,4 +210,26 @@
         <item quantity="one">%d reading</item>
         <item quantity="other">%d readings</item>
     </plurals>
+    <string name="tab_profil_naslov">Profile</string>
+    <string name="obiteljski_profil">Family profile</string>
+    <string name="uredi_podatke_clana">Edit member details</string>
+    <string name="clanovi_obitelji">Family members</string>
+    <string name="izgled">Appearance</string>
+    <string name="tema">Theme</string>
+    <string name="tema_sustav">System</string>
+    <string name="tema_svijetlo">Light</string>
+    <string name="tema_tamno">Dark</string>
+    <string name="jezik_aplikacije">App language</string>
+    <string name="povezivanje_i_podaci">Connections and data</string>
+    <string name="uvezi_kopiju_json">Import backup (JSON)</string>
+    <string name="kopija_ukljuciti_nalaze">Include the records themselves?</string>
+    <string name="kopija_samo_podaci">No, data only</string>
+    <string name="kopija_s_nalazima">Yes, include documents</string>
+    <string name="kopija_puna_opis">A full backup also contains the scanned records, discharge letters and referrals, so everything can be restored on a new phone. The file is therefore larger and holds complete medical documents — save it somewhere you trust.\n\nWithout the records, all other data is restored, but the documents themselves can no longer be recovered.</string>
+    <string name="aplikacija">App</string>
+    <string name="verzija">Version</string>
+    <string name="pohrana">Storage</string>
+    <string name="pohrana_lokalno">Locally, on this device</string>
+    <string name="demo">Demo</string>
+    <string name="o_aplikaciji_napomena">MojTijek by InfoBot — an information and organization tool. It does not replace a medical diagnosis or a doctor\'s assessment.\n© InfoBot · infobot.hr</string>
 </resources>

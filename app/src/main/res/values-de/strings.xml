@@ -210,4 +210,26 @@
         <item quantity="one">%d Messwert</item>
         <item quantity="other">%d Messwerte</item>
     </plurals>
+    <string name="tab_profil_naslov">Profil</string>
+    <string name="obiteljski_profil">Familienprofil</string>
+    <string name="uredi_podatke_clana">Mitgliedsdaten bearbeiten</string>
+    <string name="clanovi_obitelji">Familienmitglieder</string>
+    <string name="izgled">Darstellung</string>
+    <string name="tema">Design</string>
+    <string name="tema_sustav">System</string>
+    <string name="tema_svijetlo">Hell</string>
+    <string name="tema_tamno">Dunkel</string>
+    <string name="jezik_aplikacije">App-Sprache</string>
+    <string name="povezivanje_i_podaci">Verbindungen und Daten</string>
+    <string name="uvezi_kopiju_json">Sicherung importieren (JSON)</string>
+    <string name="kopija_ukljuciti_nalaze">Auch die Befunde einschließen?</string>
+    <string name="kopija_samo_podaci">Nein, nur Daten</string>
+    <string name="kopija_s_nalazima">Ja, Befunde einschließen</string>
+    <string name="kopija_puna_opis">Eine vollständige Sicherung enthält auch die gescannten Befunde, Entlassungsbriefe und Überweisungen, sodass auf einem neuen Telefon alles wiederhergestellt werden kann. Die Datei ist dadurch größer und enthält vollständige medizinische Dokumente — bewahren Sie sie an einem Ort auf, dem Sie vertrauen.\n\nOhne Befunde werden alle übrigen Daten wiederhergestellt, die Dokumente selbst lassen sich dann aber nicht mehr rekonstruieren.</string>
+    <string name="aplikacija">App</string>
+    <string name="verzija">Version</string>
+    <string name="pohrana">Speicher</string>
+    <string name="pohrana_lokalno">Lokal, auf diesem Gerät</string>
+    <string name="demo">Demo</string>
+    <string name="o_aplikaciji_napomena">MojTijek by InfoBot — ein Informations- und Organisationswerkzeug. Es ersetzt keine medizinische Diagnose oder ärztliche Beurteilung.\n© InfoBot · infobot.hr</string>
 </resources>

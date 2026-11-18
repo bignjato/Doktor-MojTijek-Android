@@ -20,6 +20,7 @@ class MainActivity : ComponentActivity() {
 
         val repo = (application as DoktorApp).repository
 
+        com.mojtijek.doktor.ui.theme.Tema.ucitaj(this)
         setContent {
             DoktorMojTijekTheme {
                 Surface(

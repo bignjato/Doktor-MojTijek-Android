@@ -210,4 +210,26 @@
         <item quantity="one">%d lettura</item>
         <item quantity="other">%d letture</item>
     </plurals>
+    <string name="tab_profil_naslov">Profilo</string>
+    <string name="obiteljski_profil">Profilo famiglia</string>
+    <string name="uredi_podatke_clana">Modifica dati del familiare</string>
+    <string name="clanovi_obitelji">Familiari</string>
+    <string name="izgled">Aspetto</string>
+    <string name="tema">Tema</string>
+    <string name="tema_sustav">Sistema</string>
+    <string name="tema_svijetlo">Chiaro</string>
+    <string name="tema_tamno">Scuro</string>
+    <string name="jezik_aplikacije">Lingua dellapp</string>
+    <string name="povezivanje_i_podaci">Collegamenti e dati</string>
+    <string name="uvezi_kopiju_json">Importa copia di sicurezza (JSON)</string>
+    <string name="kopija_ukljuciti_nalaze">Includere anche i referti?</string>
+    <string name="kopija_samo_podaci">No, solo i dati</string>
+    <string name="kopija_s_nalazima">Sì, includi i referti</string>
+    <string name="kopija_puna_opis">La copia completa contiene anche i referti scansionati, le lettere di dimissione e le impegnative, così tutto può essere ripristinato su un nuovo telefono. Il file è quindi più grande e contiene documenti medici completi — salvatelo in un luogo di cui vi fidate.\n\nSenza i referti vengono ripristinati tutti gli altri dati, ma i documenti stessi non sono più recuperabili.</string>
+    <string name="aplikacija">App</string>
+    <string name="verzija">Versione</string>
+    <string name="pohrana">Archiviazione</string>
+    <string name="pohrana_lokalno">In locale, su questo dispositivo</string>
+    <string name="demo">Demo</string>
+    <string name="o_aplikaciji_napomena">MojTijek by InfoBot — uno strumento informativo e organizzativo. Non sostituisce una diagnosi medica o la valutazione del medico.\n© InfoBot · infobot.hr</string>
 </resources>
