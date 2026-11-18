@@ -142,6 +142,28 @@ class BazaTest {
         assertEquals(0.0, Pracenje.agregat("tlak", emptyList()), 0.0)
     }
 
+    /** Forma člana: težina postaje mjerenje samo kad se promijeni; redoslijed se mijenja; brisanje miče i datoteke. */
+    @Test fun clanTezinaRedoslijedIBrisanje() = runBlocking {
+        val a = ClanEntity(ime = "A", redoslijed = 0); val b = ClanEntity(ime = "B", redoslijed = 1)
+        repo.spremiClana(a, 80.0); repo.spremiClana(b, null)
+        repo.spremiClana(a.copy(visina = 180.0), 80.0)
+        assertEquals(1, repo.mjerenjaZaClana(a.id).first().size)
+        repo.spremiClana(a, 82.5)
+        assertEquals(listOf(80.0, 82.5), repo.mjerenjaZaClana(a.id).first().sortedBy { it.vrijednost }.map { it.vrijednost })
+        assertTrue(repo.mjerenjaZaClana(b.id).first().isEmpty())
+
+        repo.pomakniClana(b.id, -1)
+        assertEquals(listOf("B", "A"), repo.clanovi.first().map { it.ime })
+        repo.pomakniClana(b.id, -1)
+        assertEquals("pomak izvan popisa ne mijenja ništa", listOf("B", "A"), repo.clanovi.first().map { it.ime })
+
+        assertTrue(repo.spremiDokument(a.id, byteArrayOf(9, 9), "application/pdf", "x.pdf"))
+        val d = repo.dokumentiZaClana(a.id).first().single()
+        repo.deleteClan(a)
+        assertEquals(false, repo.dokumentDatoteka(d.id).exists())
+        assertEquals(listOf("B"), repo.clanovi.first().map { it.ime })
+    }
+
     @Test fun napuniINaruceno() = runBlocking {
         val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
         val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00", kolicina = 2.0, komPoKutiji = 28.0); repo.upsertTerapija(t)

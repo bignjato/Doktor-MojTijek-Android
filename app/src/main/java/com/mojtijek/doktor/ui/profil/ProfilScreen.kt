@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Vaccines
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -41,7 +42,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import com.mojtijek.doktor.R
 import com.mojtijek.doktor.data.Kopija
 import com.mojtijek.doktor.ui.MojTijekViewModel
+import com.mojtijek.doktor.ui.components.ClanForma
 import com.mojtijek.doktor.ui.components.MemberAvatar
 import com.mojtijek.doktor.ui.components.ObiteljSheet
 import com.mojtijek.doktor.ui.theme.Tema
@@ -76,6 +77,7 @@ import java.util.Locale
 // član → Obitelj → Izgled → Povezivanje i podaci → Aplikacija → Demo.
 // Redak iza kojeg na Androidu još nema ekrana se ne prikazuje (Premium, Izvještaji, ICE, sažetak za liječnika,
 // zaključavanje, privole, povijest promjena, podsjetnici, vodič, uklanjanje demo podataka).
+// Cijepljenja su zaseban ekran; uređivanje člana je ista forma kao za novog člana.
 
 private fun verzija(context: Context): String = try {
     val p = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -102,7 +104,8 @@ fun ProfilScreen(vm: MojTijekViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var urediId by remember { mutableStateOf<String?>(null) }
+    var urediClana by remember { mutableStateOf(false) }
+    var cijepljenja by remember { mutableStateOf(false) }
     var obitelj by remember { mutableStateOf(false) }
     var noviClan by remember { mutableStateOf(false) }
     var biracTeme by remember { mutableStateOf(false) }
@@ -112,11 +115,12 @@ fun ProfilScreen(vm: MojTijekViewModel) {
     var poruka by remember { mutableStateOf<String?>(null) }
     var zaUvoz by remember { mutableStateOf<Pair<String, Kopija.Sazetak>?>(null) }
 
-    val uredi = urediId
-    if (uredi != null) {
-        ClanDetaljiScreen(vm = vm, clanId = uredi, onNavigateBack = { urediId = null })
+    if (cijepljenja && clan != null) {
+        CijepljenjaScreen(vm, clan.id) { cijepljenja = false }
         return
     }
+    val mjerenja by remember(vm) { vm.mjerenjaZaAktivnog() }.collectAsState(initial = emptyList())
+    val zadnjaTezina = mjerenja.filter { it.tip == "tezina" }.maxByOrNull { it.ts }?.vrijednost
 
     val spremljeno = stringResource(R.string.kopija_spremljena)
     val vraceno = stringResource(R.string.kopija_vracena)
@@ -166,12 +170,12 @@ fun ProfilScreen(vm: MojTijekViewModel) {
                         Text(stringResource(R.string.obiteljski_profil), style = MaterialTheme.typography.bodySmall,
                              color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { urediId = clan.id }) {
+                    IconButton(onClick = { urediClana = true }) {
                         Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.uredi_podatke_clana), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
                 Crta()
-                Redak(Icons.Filled.Edit, stringResource(R.string.uredi_podatke_clana), strelica = true) { urediId = clan.id }
+                Redak(Icons.Filled.Edit, stringResource(R.string.uredi_podatke_clana), strelica = true) { urediClana = true }
             }
         }
 
@@ -181,6 +185,10 @@ fun ProfilScreen(vm: MojTijekViewModel) {
                 Crta()
             }
             Redak(Icons.Filled.PersonAdd, stringResource(R.string.dodaj_clana)) { noviClan = true }
+            if (clan != null) {
+                Crta()
+                Redak(Icons.Filled.Vaccines, stringResource(R.string.cijepljenja), strelica = true) { cijepljenja = true }
+            }
         }
 
         Odjeljak(stringResource(R.string.izgled)) {
@@ -221,19 +229,12 @@ fun ProfilScreen(vm: MojTijekViewModel) {
         }
     }
 
-    if (obitelj && clan != null) ObiteljSheet(clanovi, clan.id, onOdabir = { vm.odaberiClana(it) }, onZatvori = { obitelj = false })
+    if (obitelj && clan != null) ObiteljSheet(vm, clanovi, clan.id) { obitelj = false }
 
-    if (noviClan) {
-        var ime by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { noviClan = false },
-            title = { Text(stringResource(R.string.dodaj_clana)) },
-            text = { OutlinedTextField(ime, { ime = it }, label = { Text(stringResource(R.string.ime)) }, singleLine = true) },
-            confirmButton = {
-                TextButton(enabled = ime.isNotBlank(), onClick = { vm.dodajClana(ime.trim()); noviClan = false }) { Text(stringResource(R.string.spremi)) }
-            },
-            dismissButton = { TextButton(onClick = { noviClan = false }) { Text(stringResource(R.string.odustani)) } },
-        )
+    if (noviClan) ClanForma(null, onOdustani = { noviClan = false }, onSpremi = { c, tezina -> vm.spremiClana(c, tezina, novi = true); noviClan = false })
+    if (urediClana && clan != null) {
+        ClanForma(clan, tezina = zadnjaTezina, onOdustani = { urediClana = false },
+                  onSpremi = { c, tezina -> vm.spremiClana(c, tezina, novi = false); urediClana = false })
     }
 
     // Sami nalazi ulaze u kopiju samo ako korisnik to izričito odabere (kao na iOS-u).

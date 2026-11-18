@@ -22,9 +22,8 @@ class MojTijekViewModel(private val repo: MojTijekRepository) : ViewModel() {
     init {
         viewModelScope.launch {
             clanovi.collect { list ->
-                if (_aktivniClanId.value == null && list.isNotEmpty()) {
-                    _aktivniClanId.value = list.first().id
-                }
+                // I kad odabrani član nestane (brisanje, vraćanje kopije), odabir prelazi na prvog.
+                if (list.none { it.id == _aktivniClanId.value }) _aktivniClanId.value = list.firstOrNull()?.id
             }
         }
     }
@@ -317,6 +316,15 @@ Odobrenje HZZO"""
     }
 
     fun azurirajClana(clan: ClanEntity) = viewModelScope.launch { repo.upsertClan(clan) }
+
+    /** Spremanje iz forme člana; novi član ide na kraj popisa i postaje odabrani. */
+    fun spremiClana(clan: ClanEntity, tezina: Double?, novi: Boolean) = viewModelScope.launch {
+        repo.spremiClana(if (novi) clan.copy(redoslijed = repo.clanCount()) else clan, tezina)
+        if (novi) _aktivniClanId.value = clan.id
+    }
+    fun obrisiClana(clan: ClanEntity) = viewModelScope.launch { repo.deleteClan(clan) }
+    fun pomakniClana(clan: ClanEntity, smjer: Int) = viewModelScope.launch { repo.pomakniClana(clan.id, smjer) }
+    fun obrisiCijepljenje(c: CijepljenjeEntity) = viewModelScope.launch { repo.deleteCijepljenje(c) }
 
     fun terapijeZaAktivnog(): Flow<List<TerapijaEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.terapijeAktivne(id) }
