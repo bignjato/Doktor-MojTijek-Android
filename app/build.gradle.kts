@@ -25,6 +25,19 @@ android {
         }
     }
 
+    // Testni buildovi iz CI-ja potpisani su stalnim ključem (GitHub secret), pa se novi APK instalira preko starog
+    // bez gubitka podataka. Bez ključa (lokalno, fork) vrijedi zadani debug ključ računala. Ovo NIJE ključ za Play.
+    signingConfigs {
+        val ks = System.getenv("DEV_KEYSTORE")
+        if (ks != null && file(ks).exists()) getByName("debug") {
+            storeFile = file(ks)
+            storeType = "PKCS12"
+            storePassword = System.getenv("DEV_KEYSTORE_PASSWORD")
+            keyAlias = "mojtijek-dev"
+            keyPassword = System.getenv("DEV_KEYSTORE_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

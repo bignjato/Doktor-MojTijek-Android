@@ -30,6 +30,7 @@ shared/       — Android library s poslovnom logikom
 - Razvoj ide na grani `android-1.0` (feature grana + PR); GitHub Actions na svakom PR-u gradi debug APK i vrti testove.
 - U Android Studiju: checkout `android-1.0`, *Pull*, konfiguracija **app**, *Run*.
 - Verzija APK-a je `1.0.0-b<N>`, gdje je N redni broj CI builda (veći = noviji); vidi se u imenu datoteke i u Profil → Verzija.
+- Testni APK-ovi iz CI-ja potpisani su stalnim ključem (secreti `DEV_KEYSTORE_B64`, `DEV_KEYSTORE_PASSWORD`), pa se instaliraju jedan preko drugog. Ključ za Play je zaseban i još ne postoji.
 - `main` objavljuje APK kao GitHub Release na svaki push — u `main` se mergea tek kad je verzija za objavu.
 
 ## Sinkronizacija s iOS
