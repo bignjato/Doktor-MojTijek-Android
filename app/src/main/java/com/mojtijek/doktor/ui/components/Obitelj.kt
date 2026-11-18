@@ -3,6 +3,16 @@
 package com.mojtijek.doktor.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,6 +56,24 @@ fun ObiteljSheet(clanovi: List<ClanEntity>, odabraniId: String, onOdabir: (Strin
                 }
             }
             Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+/** Kartica s imenom člana i padajućim popisom (iOS `memberPicker`). */
+@Composable
+fun IzbornikClana(clan: ClanEntity, clanovi: List<ClanEntity>, onOdabir: (String) -> Unit) {
+    var otvoren by remember { mutableStateOf(false) }
+    Box {
+        Surface(onClick = { otvoren = true }, shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
+            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                MemberAvatar(clan, 34.dp)
+                Text(clan.ime, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Icon(Icons.Filled.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            }
+        }
+        DropdownMenu(expanded = otvoren, onDismissRequest = { otvoren = false }) {
+            clanovi.forEach { c -> DropdownMenuItem(text = { Text(c.ime) }, onClick = { onOdabir(c.id); otvoren = false }) }
         }
     }
 }

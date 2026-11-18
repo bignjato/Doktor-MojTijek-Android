@@ -89,6 +89,7 @@ import com.mojtijek.doktor.data.DoseSchedule
 import com.mojtijek.doktor.data.TerapijaEntity
 import com.mojtijek.doktor.data.UzimanjeEntity
 import com.mojtijek.doktor.ui.MojTijekViewModel
+import com.mojtijek.doktor.ui.components.IzbornikClana
 import com.mojtijek.doktor.ui.components.MemberAvatar
 import com.mojtijek.doktor.ui.components.MtCard
 import com.mojtijek.doktor.ui.components.Pill
@@ -176,23 +177,6 @@ private fun Prazno(naslov: String, opis: String) {
         Icon(Icons.Filled.Medication, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(44.dp))
         Text(naslov, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text(opis, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-    }
-}
-
-@Composable
-private fun IzbornikClana(clan: ClanEntity, clanovi: List<ClanEntity>, onOdabir: (String) -> Unit) {
-    var otvoren by remember { mutableStateOf(false) }
-    Box {
-        Surface(onClick = { otvoren = true }, shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
-            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MemberAvatar(clan, 34.dp)
-                Text(clan.ime, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-            }
-        }
-        DropdownMenu(expanded = otvoren, onDismissRequest = { otvoren = false }) {
-            clanovi.forEach { c -> DropdownMenuItem(text = { Text(c.ime) }, onClick = { onOdabir(c.id); otvoren = false }) }
-        }
     }
 }
 

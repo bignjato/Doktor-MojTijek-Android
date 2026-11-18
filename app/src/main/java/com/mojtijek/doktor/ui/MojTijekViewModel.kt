@@ -376,6 +376,7 @@ Odobrenje HZZO"""
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.mjerenjaZaClana(id) }
     fun dodajMjerenje(m: MjerenjeEntity) = viewModelScope.launch { repo.upsertMjerenje(m) }
     fun obrisiMjerenje(m: MjerenjeEntity) = viewModelScope.launch { repo.deleteMjerenje(m) }
+    suspend fun upisiZdravlje(clanId: String, vrijednosti: Map<String, com.mojtijek.doktor.data.Ocitanje>): Int = repo.upisiZdravlje(clanId, vrijednosti)
 
     fun cijepljenjaZaAktivnog(): Flow<List<CijepljenjeEntity>> =
         aktivniClanId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repo.cijepljenjaZaClana(id) }

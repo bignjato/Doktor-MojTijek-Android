@@ -109,6 +109,39 @@ class BazaTest {
         assertEquals(1, repo.dokumentiZaClana(clan.id).first().size)
     }
 
+    /** Health Connect: jedan zapis po pokazatelju po danu; ručni unos ostaje; nepoznat član ne ruši upis. */
+    @Test fun zdravljeSeUpisujeBezDuplikata() = runBlocking {
+        val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
+        repo.upsertMjerenje(MjerenjeEntity(clanId = clan.id, tip = "tlak", vrijednost = 130.0, vrijednost2 = 85.0, ts = dan + 1000))
+        val sada = dan + 3_600_000L
+        assertEquals(2, repo.upisiZdravlje(clan.id, mapOf("koraci" to Ocitanje(1200.0, sada), "tlak" to Ocitanje(120.0, sada, 80.0))))
+        assertEquals(1, repo.upisiZdravlje(clan.id, mapOf("koraci" to Ocitanje(4300.0, sada + 60_000))))
+        repo.upisiZdravlje(clan.id, mapOf("koraci" to Ocitanje(900.0, sada + 86_400_000L)))
+        val m = repo.mjerenjaZaClana(clan.id).first()
+        val koraci = m.filter { it.tip == "koraci" }.sortedBy { it.ts }
+        assertEquals(listOf(4300.0, 900.0), koraci.map { it.vrijednost })
+        assertTrue(koraci.all { it.izvor == "healthconnect" })
+        val tlak = m.filter { it.tip == "tlak" }
+        assertEquals(2, tlak.size)
+        assertEquals(85.0, tlak.single { it.izvor == "rucno" }.vrijednost2!!, 0.0)
+        assertEquals(80.0, tlak.single { it.izvor == "healthconnect" }.vrijednost2!!, 0.0)
+        assertTrue(db.clanDao().getById(clan.id)!!.zadnjiIngest != null)
+        assertEquals(0, repo.upisiZdravlje("nema-ga", mapOf("koraci" to Ocitanje(1.0, sada))))
+    }
+
+    /** Koraci: najveće očitanje dana, pa zbroj dana. Ostalo: prosjek dana, pa prosjek dana. */
+    @Test fun dnevneVrijednostiIAgregat() {
+        fun m(tip: String, v: Double, unatrag: Int, v2: Double? = null) =
+            MjerenjeEntity(clanId = "c", tip = tip, vrijednost = v, vrijednost2 = v2, ts = dan - unatrag * 86_400_000L + 3_600_000L)
+        val koraci = Pracenje.dnevneVrijednosti("koraci", listOf(m("koraci", 1000.0, 0), m("koraci", 8000.0, 0), m("koraci", 5000.0, 1)))
+        assertEquals(listOf(5000.0, 8000.0), koraci.map { it.vrijednost })
+        assertEquals(13000.0, Pracenje.agregat("koraci", koraci), 0.0)
+        val tlak = Pracenje.dnevneVrijednosti("tlak", listOf(m("tlak", 120.0, 0, 80.0), m("tlak", 140.0, 0, 90.0), m("tlak", 110.0, 1, 70.0)))
+        assertEquals(listOf(110.0, 130.0), tlak.map { it.vrijednost }); assertEquals(85.0, tlak.last().vrijednost2!!, 0.0)
+        assertEquals(120.0, Pracenje.agregat("tlak", tlak), 0.0)
+        assertEquals(0.0, Pracenje.agregat("tlak", emptyList()), 0.0)
+    }
+
     @Test fun napuniINaruceno() = runBlocking {
         val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
         val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00", kolicina = 2.0, komPoKutiji = 28.0); repo.upsertTerapija(t)
