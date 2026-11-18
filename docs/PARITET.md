@@ -9,11 +9,11 @@ Stanje grane `android-1.0` na dan 2026-11-17. „Ekran” = postoji unos/pregled
 | Potvrda doze, adherencija | da | da | jedan zapis po dozi; nema povijesti izmjena (audit) |
 | Podsjetnici za doze i termine | da | **ne** | bio je samo kostur koji ništa nije zakazivao |
 | Zaliha, „pri kraju”, narudžba lijekova | da | djelomično | nema narudžbe e-mailom ni 30/60/90 |
-| Kartoteka: dokumenti (PDF, sken, foto) | da | **ne** | postoji samo zapis o dokumentu, bez datoteke |
+| Kartoteka: dokumenti (PDF, sken, foto) | da | djelomično | PDF i slike iz datoteka/galerije, otvaranje u aplikaciji; nema skeniranja ni slanja |
 | AI čitanje/objašnjenje nalaza (privola) | da | **ne** | ai-proxy traži App Attest → treba Play Integrity put |
-| Lab vrijednosti i trendovi | da | **ne** | tablica postoji, nema unosa ni prikaza |
+| Lab vrijednosti i trendovi | da | prikaz | trendovi se prikazuju; vrijednosti stižu samo iz iOS kopije (nema AI čitanja) |
 | Kalendar pregleda, uputnica uz termin | da | ekran | bez podsjetnika i sinkronizacije s kalendarom uređaja |
-| Praćenje (tlak, šećer, težina…), grafovi | da | ekran | bez Health Connecta |
+| Praćenje (tlak, šećer, težina…), grafovi | da | da | Health Connect (samo čitanje, 7 pokazatelja, izvor `healthconnect`); nije isprobano na uređaju; nema pozadinskog osvježavanja ni upozorenja na vrijednost |
 | Cijepljenja, dnevnik | da | ekran | |
 | Ciklus / žensko zdravlje | da | **ne** | tablica postoji, nema ekrana |
 | ICE iskaznica s QR kodom, sažetak za liječnika (PDF) | da | **ne** | |
@@ -23,7 +23,7 @@ Stanje grane `android-1.0` na dan 2026-11-17. „Ekran” = postoji unos/pregled
 | Zaključavanje biometrijom | da | **ne** | |
 | Onboarding, demo obitelj, „Što je novo” | da | **ne** | |
 | Premium (do 2 člana besplatno) | da | **ne** | Play Billing |
-| Jezici hr/en/it/de | da | **ne** | svi tekstovi su upisani u kod, na hrvatskom |
+| Jezici hr/en/it/de | da | djelomično | usklađeni ekrani su na 4 jezika; Profil, Kalendar i Dnevnik samo hrvatski |
 | Widget | da | **ne** | |
 | Testovi | 87 | 3 | |
 
@@ -35,9 +35,9 @@ Boje, tema (svijetla/tamna prema sustavu), oblik kartica i traka tabova prenesen
 | Ekran | Stanje |
 |---|---|
 | Danas (Moj dan) | usklađen; nedostaje: Odgodi, kratki opis lijeka, Uputnica/bolnica, ekran narudžbe, ICE, nalazi koji čekaju potvrdu |
-| Terapije | nije |
-| Nalazi / Kartoteka | nije |
-| Praćenje | nije (ključevi pokazatelja jesu: `tlak`, `secer`, `tezina`… kao iOS) |
+| Terapije | usklađen; nedostaje: Pametna terapija, skeniranje kutije, AI opis lijeka |
+| Nalazi / Kartoteka | usklađen; nedostaje: Skeniraj, Portal zdravlja, slanje, AI čitanje |
+| Praćenje | usklađen; nedostaje: Žensko zdravlje, povlačenje za osvježavanje |
 | Profil | nije |
 | Kalendar, Dnevnik | nije |
 
@@ -54,7 +54,9 @@ Usporedba je zasad po kodu; snimke ekrana u CI-ju još ne postoje.
 7. **Portal zdravlja.**
 8. Play: izvoz Room sheme (`exportSchema`) prije prve objave, potpisivanje, `versionCode`, release build s R8, politika privatnosti, Data safety.
 
-Nakon 1.0: Pametna terapija, ciklus, ICE/QR, Health Connect, widget, Premium.
+Nakon 1.0: Pametna terapija, ciklus, ICE/QR, widget, Premium.
+
+Play: dozvole Health Connecta traže izjavu o zdravstvenim podacima u Play Consoleu (Health apps declaration) prije objave.
 
 ## Otvorene odluke (Boris)
 

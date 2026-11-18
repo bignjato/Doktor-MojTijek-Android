@@ -125,6 +125,24 @@ class MojTijekRepository(private val db: MojTijekDatabase, private val datoteke:
     suspend fun upsertMjerenje(m: MjerenjeEntity) = db.mjerenjeDao().upsert(m)
     suspend fun deleteMjerenje(m: MjerenjeEntity) = db.mjerenjeDao().delete(m)
 
+    /**
+     * Upis vrijednosti iz Health Connecta (iOS `HealthSync.sync`): jedan zapis po pokazatelju po danu,
+     * pa ponovna sinkronizacija ažurira umjesto da duplicira. Ručni unosi se ne diraju. Vraća broj pokazatelja.
+     */
+    suspend fun upisiZdravlje(clanId: String, vrijednosti: Map<String, Ocitanje>): Int {
+        val clan = db.clanDao().getById(clanId) ?: return 0
+        if (vrijednosti.isEmpty()) return 0
+        val postojeca = db.mjerenjeDao().observeByClan(clanId).first().filter { it.izvor == HealthConnect.IZVOR }
+        for ((tip, o) in vrijednosti) {
+            val dan = DoseSchedule.dayStart(o.ts)
+            val osnova = postojeca.firstOrNull { it.tip == tip && DoseSchedule.dayStart(it.ts) == dan } ?: MjerenjeEntity(clanId = clanId, tip = tip)
+            db.mjerenjeDao().upsert(osnova.copy(vrijednost = o.vrijednost, vrijednost2 = o.vrijednost2, ts = o.ts, datum = o.ts,
+                                                izvor = HealthConnect.IZVOR, jedinica = HealthConnect.JEDINICE[tip]))
+        }
+        db.clanDao().upsert(clan.copy(zadnjiIngest = System.currentTimeMillis()))
+        return vrijednosti.size
+    }
+
     fun cijepljenjaZaClana(clanId: String): Flow<List<CijepljenjeEntity>> = db.cijepljenjeDao().observeByClan(clanId)
     suspend fun upsertCijepljenje(c: CijepljenjeEntity) = db.cijepljenjeDao().upsert(c)
 

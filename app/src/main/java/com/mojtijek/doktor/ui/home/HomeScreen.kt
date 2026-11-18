@@ -54,6 +54,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -87,6 +88,7 @@ import com.mojtijek.doktor.ui.components.VITALI
 import com.mojtijek.doktor.ui.components.formatMjerenja
 import com.mojtijek.doktor.ui.components.vitalNaziv
 import com.mojtijek.doktor.ui.pracenje.NovoMjerenjeDialog
+import com.mojtijek.doktor.ui.pracenje.osvjeziZdravlje
 import com.mojtijek.doktor.ui.theme.Mt
 import kotlinx.coroutines.delay
 import java.text.DateFormat
@@ -137,6 +139,9 @@ fun HomeScreen(
 
     var obitelj by remember { mutableStateOf(false) }
     var novoMjerenje by remember { mutableStateOf(false) }
+    // Health Connect: osvježi današnje vrijednosti kad se otvori početni ekran (najviše jednom u 15 min).
+    val kontekst = LocalContext.current
+    LaunchedEffect(Unit) { osvjeziZdravlje(kontekst, vm) }
 
     Column(
         Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()
@@ -441,7 +446,7 @@ private fun Pokazatelj(tip: String, m: MjerenjeEntity?, modifier: Modifier, onCl
                     Text(info?.jedinica ?: "", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                          modifier = Modifier.padding(bottom = 3.dp))
                 }
-                val izvor = if (m.izvor == "healthkit") "Apple Health" else stringResource(R.string.rucno)
+                val izvor = when (m.izvor) { "healthkit" -> "Apple Health"; "healthconnect" -> "Health Connect"; else -> stringResource(R.string.rucno) }
                 Text("$izvor · ${danVrijeme(m.ts)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                      maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (tip == "koraci") {
