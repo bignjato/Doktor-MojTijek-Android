@@ -45,8 +45,23 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
+      - name: Ključ za potpis testnih buildova
+        env:
+          DEV_KEYSTORE_B64: ${{ secrets.DEV_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$DEV_KEYSTORE_B64" ]; then
+            echo "$DEV_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/dev.p12"
+            echo "DEV_KEYSTORE=$RUNNER_TEMP/dev.p12" >> "$GITHUB_ENV"
+          fi
+
       - name: Build debug APK
+        env:
+          DEV_KEYSTORE_PASSWORD: ${{ secrets.DEV_KEYSTORE_PASSWORD }}
         run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Otisak potpisa
+        run: |
+          "$(ls -d $ANDROID_SDK_ROOT/build-tools/* | tail -1)/apksigner" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | grep -i "SHA-256"
 
       - name: Imenuj APK po verziji
         run: mv app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/MojTijek-Android-1.0.0-b${GITHUB_RUN_NUMBER}.apk"
