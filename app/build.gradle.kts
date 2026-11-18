@@ -15,6 +15,10 @@ android {
         applicationId = "hr.infobot.mojtijek"
         minSdk = 26
         targetSdk = 35
+        // Broj builda daje CI (redni broj pokretanja); veći broj = noviji build. Lokalno iz Android Studija: 1 / „lokalno”.
+        val build = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()
+        versionCode = build ?: 1
+        versionName = "1.0.0" + (if (build != null) "-b$build" else "-lokalno")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
