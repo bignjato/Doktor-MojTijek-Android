@@ -213,4 +213,26 @@
         <item quantity="few">%d očitanja</item>
         <item quantity="other">%d očitanja</item>
     </plurals>
+    <string name="tab_profil_naslov">Profil</string>
+    <string name="obiteljski_profil">Obiteljski profil</string>
+    <string name="uredi_podatke_clana">Uredi podatke člana</string>
+    <string name="clanovi_obitelji">Članovi obitelji</string>
+    <string name="izgled">Izgled</string>
+    <string name="tema">Tema</string>
+    <string name="tema_sustav">Sustav</string>
+    <string name="tema_svijetlo">Svijetlo</string>
+    <string name="tema_tamno">Tamno</string>
+    <string name="jezik_aplikacije">Jezik aplikacije</string>
+    <string name="povezivanje_i_podaci">Povezivanje i podaci</string>
+    <string name="uvezi_kopiju_json">Uvezi sigurnosnu kopiju (JSON)</string>
+    <string name="kopija_ukljuciti_nalaze">Uključiti i same nalaze?</string>
+    <string name="kopija_samo_podaci">Ne, samo podaci</string>
+    <string name="kopija_s_nalazima">Da, uključi nalaze</string>
+    <string name="kopija_puna_opis">Puna kopija sadrži i skenirane nalaze, otpusna pisma i uputnice, pa se sve može vratiti na novom telefonu. Datoteka je zato veća i u njoj su cjeloviti medicinski dokumenti — spremite je na mjesto kojem vjerujete.\n\nBez nalaza se vraćaju svi ostali podaci, ali same dokumente više nije moguće obnoviti.</string>
+    <string name="aplikacija">Aplikacija</string>
+    <string name="verzija">Verzija</string>
+    <string name="pohrana">Pohrana</string>
+    <string name="pohrana_lokalno">Lokalno, na ovom uređaju</string>
+    <string name="demo">Demo</string>
+    <string name="o_aplikaciji_napomena">MojTijek by InfoBot — informacijski i organizacijski alat. Ne zamjenjuje medicinsku dijagnozu ili liječničku procjenu.\n© InfoBot · infobot.hr</string>
 </resources>

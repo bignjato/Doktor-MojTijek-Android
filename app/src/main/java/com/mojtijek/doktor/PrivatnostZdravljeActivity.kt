@@ -26,6 +26,7 @@ import com.mojtijek.doktor.ui.theme.DoktorMojTijekTheme
 class PrivatnostZdravljeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.mojtijek.doktor.ui.theme.Tema.ucitaj(this)
         setContent {
             DoktorMojTijekTheme {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {

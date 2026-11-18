@@ -1,5 +1,6 @@
 package com.mojtijek.doktor.ui.theme
 
+import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -7,6 +8,10 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -45,7 +50,22 @@ private val Oblici = Shapes(
     large = RoundedCornerShape(22.dp), extraLarge = RoundedCornerShape(28.dp),
 )
 
+/** Izbor teme u Profilu (iOS `appearance`): "system", "light" ili "dark"; pamti se u postavkama aplikacije. */
+object Tema {
+    private const val KLJUC = "appearance"
+    var izbor by mutableStateOf("system")
+        private set
+    fun ucitaj(context: Context) { izbor = context.getSharedPreferences("mojtijek", Context.MODE_PRIVATE).getString(KLJUC, null) ?: "system" }
+    fun postavi(context: Context, vrijednost: String) {
+        izbor = vrijednost
+        context.getSharedPreferences("mojtijek", Context.MODE_PRIVATE).edit().putString(KLJUC, vrijednost).apply()
+    }
+}
+
+@Composable @ReadOnlyComposable
+fun tamnaTema(): Boolean = when (Tema.izbor) { "light" -> false; "dark" -> true; else -> isSystemInDarkTheme() }
+
 @Composable
 fun DoktorMojTijekTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) Tamna else Svijetla, shapes = Oblici, content = content)
+    MaterialTheme(colorScheme = if (tamnaTema()) Tamna else Svijetla, shapes = Oblici, content = content)
 }

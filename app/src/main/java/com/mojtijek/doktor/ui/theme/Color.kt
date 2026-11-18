@@ -1,6 +1,5 @@
 package com.mojtijek.doktor.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
@@ -17,5 +16,5 @@ object Mt {
 
     /** Tinta za naslove i vrijednosti (mtInk). */
     val ink: Color
-        @Composable @ReadOnlyComposable get() = if (isSystemInDarkTheme()) Color(0xFFEAF0F4) else Color(0xFF17324A)
+        @Composable @ReadOnlyComposable get() = if (tamnaTema()) Color(0xFFEAF0F4) else Color(0xFF17324A)
 }
