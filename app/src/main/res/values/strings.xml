@@ -318,4 +318,18 @@
     <string name="podsjetnik_dana_prije">Podsjetnik stiže u 9 h, %1$d dana prije pregleda.</string>
     <string name="novi_dogadjaj">Novi događaj</string>
     <string name="uredi_dogadjaj">Uredi događaj</string>
+    <string name="pod_lijek">💊 Vrijeme za lijek</string>
+    <string name="pod_recept">📄 Recept ističe</string>
+    <string name="pod_pri_kraju">📦 Lijek pri kraju</string>
+    <string name="pod_cijepljenje">💉 Cijepljenje</string>
+    <string name="pod_pregled">📅 Nadolazeći pregled</string>
+    <string name="podsjetnici">Podsjetnici</string>
+    <string name="obavijesti_i_terapije">Obavijesti i terapije</string>
+    <string name="pod_recept_tekst">%1$s: recept za %2$s vrijedi do %3$s.</string>
+    <string name="pod_narudzba_tekst">%1$s: %2$s %3$s — vrijeme za narudžbu</string>
+    <string name="pod_cjepivo_tekst">%1$s: sljedeća doza — %2$s (%3$s).</string>
+    <string name="pod_u_vrijeme"> u %1$s</string>
+    <string name="pod_priprema"> Priprema: %1$s</string>
+    <string name="obavijesti_nedopustene">Obavijesti nisu dopuštene u postavkama telefona.</string>
+    <string name="podsjetnici_napomena">Podsjetnik može stići nekoliko minuta nakon zadanog vremena, osobito dok telefon štedi bateriju.</string>
 </resources>
