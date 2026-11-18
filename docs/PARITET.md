@@ -39,7 +39,7 @@ Boje, tema (svijetla/tamna prema sustavu), oblik kartica i traka tabova prenesen
 | Nalazi / Kartoteka | usklađen; nedostaje: Skeniraj, Portal zdravlja, slanje, AI čitanje |
 | Praćenje | usklađen; nedostaje: Žensko zdravlje, povlačenje za osvježavanje |
 | Profil | usklađen; izbor teme i jezika; prikazuju se samo redci iza kojih postoji ekran; forma člana i Obitelj (uređivanje, redoslijed, brisanje) kao iOS; Cijepljenja zaseban ekran |
-| Kalendar, Dnevnik | nije |
+| Kalendar, Dnevnik | usklađeni; Kalendar nema zahtjev za uputnicu ni upis u Kalendar telefona |
 
 Usporedba je zasad po kodu; snimke ekrana u CI-ju još ne postoje.
 

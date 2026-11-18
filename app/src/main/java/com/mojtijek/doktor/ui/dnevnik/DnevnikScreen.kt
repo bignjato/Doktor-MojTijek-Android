@@ -3,532 +3,186 @@
 package com.mojtijek.doktor.ui.dnevnik
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Healing
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mojtijek.doktor.R
 import com.mojtijek.doktor.data.DnevnikUnosEntity
+import com.mojtijek.doktor.data.DoseSchedule
 import com.mojtijek.doktor.ui.MojTijekViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import com.mojtijek.doktor.ui.components.Brojac
+import com.mojtijek.doktor.ui.components.DatumVrijemeRedak
+import com.mojtijek.doktor.ui.components.FormaDialog
+import com.mojtijek.doktor.ui.components.FormaOdjeljak
+import com.mojtijek.doktor.ui.components.MtCard
+import com.mojtijek.doktor.ui.theme.Mt
+import java.text.DateFormat
+import java.util.Date
+
+// Dnevnik člana (iOS `DiaryView` / `AddDiaryEntryView`): filtar po vrsti, zapisi grupirani po danu.
+
+private val VRSTE = listOf("simptom" to R.string.simptom, "lijek" to R.string.lijek, "navika" to R.string.navika, "biljeska" to R.string.biljeska)
 
 @Composable
-fun DnevnikScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit = {}) {
-    val unosi by vm.dnevnikZaAktivnog().collectAsState(initial = emptyList())
+fun DnevnikScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit) {
     val aktivniId by vm.aktivniClanId.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
-    var selectedUnos by remember { mutableStateOf<DnevnikUnosEntity?>(null) }
+    val unosi by remember(vm) { vm.dnevnikZaAktivnog() }.collectAsState(initial = emptyList())
+    var filtar by rememberSaveable { mutableStateOf("") }
+    var novi by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Dnevnik", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, "Natrag")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showDialog = true },
-                shape = RoundedCornerShape(28.dp),
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Novi unos")
-            }
-        }
-    ) { padding ->
-        if (unosi.isEmpty()) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(32.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.EditNote,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        "Nema unosa u dnevniku",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "Zabilježite simptome, raspoloženje ili važne događaje pomoću + gumba.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                items(unosi) { unos ->
-                    DnevnikCard(
-                        unos = unos,
-                        onClick = { selectedUnos = unos },
-                        onDelete = { vm.obrisiDnevnikUnos(it) }
-                    )
+    val sada = System.currentTimeMillis()
+    val danas = DoseSchedule.dayStart(sada)
+    val jucer = DoseSchedule.dayStart(danas - 1)
+    val grupe = remember(unosi, filtar) {
+        unosi.filter { filtar.isEmpty() || it.vrsta == filtar }.sortedByDescending { it.datum ?: 0L }
+            .groupBy { DoseSchedule.dayStart(it.datum ?: sada) }.toList().sortedByDescending { it.first }
+    }
+
+    LazyColumn(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding(),
+               contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.natrag)) }
+                Text(stringResource(R.string.dnevnik), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                IconButton(onClick = { novi = true }, enabled = aktivniId != null) {
+                    Icon(Icons.Filled.AddCircle, contentDescription = stringResource(R.string.novi_zapis), tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
-    }
-
-    if (showDialog) {
-        NoviDnevnikDialog(
-            clanId = aktivniId ?: "",
-            onDismiss = { showDialog = false },
-            onSpremi = { unos ->
-                vm.dodajDnevnikUnos(unos)
-                showDialog = false
-            }
-        )
-    }
-
-    selectedUnos?.let { unos ->
-        DnevnikDetaljiDialog(
-            unos = unos,
-            onDismiss = { selectedUnos = null },
-            onUpdate = { updated ->
-                vm.dodajDnevnikUnos(updated)
-                selectedUnos = null
-            }
-        )
-    }
-}
-
-@Composable
-private fun DnevnikCard(
-    unos: DnevnikUnosEntity,
-    onClick: () -> Unit,
-    onDelete: (DnevnikUnosEntity) -> Unit
-) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp
-    ) {
-        Column(Modifier.padding(20.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Emoji for mood/type
-                        val emoji = when {
-                            unos.raspolozenje != null -> when {
-                                unos.raspolozenje >= 4 -> "😊"
-                                unos.raspolozenje >= 3 -> "🙂"
-                                unos.raspolozenje >= 2 -> "😐"
-                                else -> "😔"
-                            }
-                            unos.vrsta == "simptom" -> "🤒"
-                            unos.vrsta == "bol" -> "💢"
-                            else -> "📝"
-                        }
-                        Text(emoji, style = MaterialTheme.typography.headlineSmall)
-
-                        Column {
-                            Text(
-                                unos.naslov ?: unos.vrsta.replaceFirstChar { it.uppercase() },
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                SimpleDateFormat("d. MMM yyyy. HH:mm", Locale("hr", "HR")).format(Date(unos.datum ?: System.currentTimeMillis())),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                IconButton(onClick = { showDeleteDialog = true }) {
-                    Icon(
-                        Icons.Filled.Delete,
-                        contentDescription = "Obriši",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            unos.tekst?.takeIf { it.isNotBlank() }?.let { tekst ->
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    tekst.take(150) + if (tekst.length > 150) "..." else "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (unos.jacina != null) {
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "Jačina:",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    repeat(5) { i ->
-                        Icon(
-                            if (i < (unos.jacina ?: 0)) Icons.Filled.Circle else Icons.Outlined.Circle,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+        item {
+            val filtri = listOf("" to R.string.sve, "simptom" to R.string.simptomi, "lijek" to R.string.lijekovi, "navika" to R.string.navike)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                filtri.forEachIndexed { i, (kljuc, naziv) ->
+                    SegmentedButton(selected = filtar == kljuc, onClick = { filtar = kljuc }, icon = {},
+                                    shape = SegmentedButtonDefaults.itemShape(index = i, count = filtri.size)) {
+                        Text(stringResource(naziv), maxLines = 1)
                     }
                 }
             }
         }
-    }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Obriši unos?") },
-            text = { Text("Jeste li sigurni da želite obrisati ovaj unos?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete(unos)
-                    showDeleteDialog = false
-                }) {
-                    Text("Obriši", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Odustani")
+        if (grupe.isEmpty()) {
+            item {
+                Column(Modifier.fillMaxWidth().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(44.dp))
+                    Text(stringResource(R.string.nema_zapisa), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.dnevnik_opis), color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                 }
             }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NoviDnevnikDialog(
-    clanId: String,
-    onDismiss: () -> Unit,
-    onSpremi: (DnevnikUnosEntity) -> Unit
-) {
-    var vrsta by remember { mutableStateOf("bilješka") }
-    var naslov by remember { mutableStateOf("") }
-    var tekst by remember { mutableStateOf("") }
-    var raspolozenje by remember { mutableStateOf<Int?>(null) }
-    var jacina by remember { mutableStateOf<Int?>(null) }
-    var expanded by remember { mutableStateOf(false) }
-
-    val vrste = listOf("bilješka", "simptom", "bol", "događaj")
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Novi unos u dnevnik") },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = vrsta.replaceFirstChar { it.uppercase() },
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Vrsta") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        vrste.forEach { v ->
-                            DropdownMenuItem(
-                                text = { Text(v.replaceFirstChar { it.uppercase() }) },
-                                onClick = {
-                                    vrsta = v
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                OutlinedTextField(
-                    value = naslov,
-                    onValueChange = { naslov = it },
-                    label = { Text("Naslov") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = tekst,
-                    onValueChange = { tekst = it },
-                    label = { Text("Tekst") },
-                    maxLines = 5,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Mood selector
-                if (vrsta == "bilješka" || vrsta == "događaj") {
+        }
+        items(grupe, key = { it.first }) { (dan, zapisi) ->
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(when (dan) {
+                         danas -> stringResource(R.string.tab_danas)
+                         jucer -> stringResource(R.string.jucer)
+                         else -> DateFormat.getDateInstance(DateFormat.LONG).format(Date(dan))
+                     }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                MtCard {
                     Column {
-                        Text(
-                            "Raspoloženje:",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            listOf("😔" to 1, "😐" to 2, "🙂" to 3, "😊" to 4, "😄" to 5).forEach { (emoji, value) ->
-                                FilterChip(
-                                    selected = raspolozenje == value,
-                                    onClick = { raspolozenje = if (raspolozenje == value) null else value },
-                                    label = { Text(emoji, style = MaterialTheme.typography.titleLarge) }
-                                )
-                            }
+                        zapisi.forEachIndexed { i, e ->
+                            Red(e)
+                            if (i < zapisi.size - 1) HorizontalDivider(Modifier.padding(start = 42.dp), color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
                 }
-
-                // Intensity selector for symptoms/pain
-                if (vrsta == "simptom" || vrsta == "bol") {
-                    Column {
-                        Text(
-                            "Jačina (1-5):",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            (1..5).forEach { value ->
-                                FilterChip(
-                                    selected = jacina == value,
-                                    onClick = { jacina = if (jacina == value) null else value },
-                                    label = { Text(value.toString()) }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onSpremi(
-                    DnevnikUnosEntity(
-                        clanId = clanId,
-                        datum = System.currentTimeMillis(),
-                        vrsta = vrsta,
-                        naslov = naslov.ifBlank { null },
-                        tekst = tekst.ifBlank { null },
-                        raspolozenje = raspolozenje,
-                        jacina = jacina
-                    )
-                )
-            }) {
-                Text("Spremi")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Odustani")
             }
         }
-    )
+    }
+
+    val clanId = aktivniId
+    if (novi && clanId != null) {
+        var vrsta by remember { mutableStateOf("simptom") }
+        var naslov by remember { mutableStateOf("") }
+        var napomena by remember { mutableStateOf("") }
+        var jacina by remember { mutableStateOf(1) }
+        var datum by remember { mutableStateOf(System.currentTimeMillis()) }
+        FormaDialog(stringResource(R.string.novi_zapis), valjano = naslov.isNotBlank() || napomena.isNotBlank(), onOdustani = { novi = false }, onSpremi = {
+            vm.dodajDnevnikUnos(DnevnikUnosEntity(clanId = clanId, datum = datum, vrsta = vrsta, naslov = naslov.trim().ifEmpty { null },
+                                                  tekst = napomena.trim().ifEmpty { null }, jacina = if (vrsta == "simptom") jacina else null))
+            novi = false
+        }) {
+            FormaOdjeljak(stringResource(R.string.vrsta)) {
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    VRSTE.forEachIndexed { i, (kljuc, naziv) ->
+                        SegmentedButton(selected = vrsta == kljuc, onClick = { vrsta = kljuc }, icon = {},
+                                        shape = SegmentedButtonDefaults.itemShape(index = i, count = VRSTE.size)) {
+                            Text(stringResource(naziv), maxLines = 1)
+                        }
+                    }
+                }
+            }
+            FormaOdjeljak(stringResource(R.string.zapis)) {
+                OutlinedTextField(naslov, { naslov = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                                  label = { Text(stringResource(if (vrsta == "simptom") R.string.npr_glavobolja else R.string.naslov)) })
+                OutlinedTextField(napomena, { napomena = it }, label = { Text(stringResource(R.string.napomena)) }, modifier = Modifier.fillMaxWidth())
+                if (vrsta == "simptom") Brojac(stringResource(R.string.jacina_od_5, jacina), jacina, 1..5) { jacina = it }
+                DatumVrijemeRedak(stringResource(R.string.vrijeme), datum) { datum = it }
+            }
+        }
+    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DnevnikDetaljiDialog(
-    unos: DnevnikUnosEntity,
-    onDismiss: () -> Unit,
-    onUpdate: (DnevnikUnosEntity) -> Unit
-) {
-    var vrsta by remember { mutableStateOf(unos.vrsta) }
-    var naslov by remember { mutableStateOf(unos.naslov ?: "") }
-    var tekst by remember { mutableStateOf(unos.tekst ?: "") }
-    var raspolozenje by remember { mutableStateOf(unos.raspolozenje) }
-    var jacina by remember { mutableStateOf(unos.jacina) }
-    var expanded by remember { mutableStateOf(false) }
-
-    val vrste = listOf("bilješka", "simptom", "bol", "događaj")
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Uredi unos") },
-        text = {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = vrsta.replaceFirstChar { it.uppercase() },
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Vrsta") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            vrste.forEach { v ->
-                                DropdownMenuItem(
-                                    text = { Text(v.replaceFirstChar { it.uppercase() }) },
-                                    onClick = {
-                                        vrsta = v
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = naslov,
-                        onValueChange = { naslov = it },
-                        label = { Text("Naslov") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = tekst,
-                        onValueChange = { tekst = it },
-                        label = { Text("Tekst") },
-                        maxLines = 5,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                if (vrsta == "bilješka" || vrsta == "događaj") {
-                    item {
-                        Column {
-                            Text(
-                                "Raspoloženje:",
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                listOf("😔" to 1, "😐" to 2, "🙂" to 3, "😊" to 4, "😄" to 5).forEach { (emoji, value) ->
-                                    FilterChip(
-                                        selected = raspolozenje == value,
-                                        onClick = { raspolozenje = if (raspolozenje == value) null else value },
-                                        label = { Text(emoji, style = MaterialTheme.typography.titleLarge) }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (vrsta == "simptom" || vrsta == "bol") {
-                    item {
-                        Column {
-                            Text(
-                                "Jačina (1-5):",
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                (1..5).forEach { value ->
-                                    FilterChip(
-                                        selected = jacina == value,
-                                        onClick = { jacina = if (jacina == value) null else value },
-                                        label = { Text(value.toString()) }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onUpdate(
-                    unos.copy(
-                        vrsta = vrsta,
-                        naslov = naslov.ifBlank { null },
-                        tekst = tekst.ifBlank { null },
-                        raspolozenje = raspolozenje,
-                        jacina = jacina
-                    )
-                )
-            }) {
-                Text("Spremi")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Zatvori")
-            }
+private fun Red(e: DnevnikUnosEntity) {
+    val boja = when (e.vrsta) { "simptom" -> Mt.Red; "lijek" -> Mt.Purple; "navika" -> Mt.Green; else -> Mt.Teal }
+    val ikona = when (e.vrsta) {
+        "simptom" -> Icons.Filled.Healing
+        "lijek" -> Icons.Filled.Medication
+        "navika" -> Icons.AutoMirrored.Filled.DirectionsRun
+        else -> Icons.AutoMirrored.Filled.Notes
+    }
+    val zamjenski = stringResource(VRSTE.firstOrNull { it.first == e.vrsta }?.second ?: R.string.zapis)
+    Row(Modifier.fillMaxWidth().padding(vertical = 9.dp), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Box(Modifier.size(32.dp).clip(CircleShape).background(boja.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+            Icon(ikona, contentDescription = null, tint = boja, modifier = Modifier.size(18.dp))
         }
-    )
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(e.naslov?.takeIf { it.isNotBlank() } ?: zamjenski, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            e.tekst?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            e.jacina?.let { Text(stringResource(R.string.jacina_od_5, it), style = MaterialTheme.typography.labelSmall, color = boja) }
+        }
+        Text(DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(e.datum ?: System.currentTimeMillis())),
+             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }

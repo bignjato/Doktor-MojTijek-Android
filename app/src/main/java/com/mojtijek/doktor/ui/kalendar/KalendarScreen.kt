@@ -1,605 +1,223 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
 package com.mojtijek.doktor.ui.kalendar
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mojtijek.doktor.R
+import com.mojtijek.doktor.data.ClanEntity
 import com.mojtijek.doktor.data.DogadjajEntity
+import com.mojtijek.doktor.data.DoseSchedule
 import com.mojtijek.doktor.ui.MojTijekViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import com.mojtijek.doktor.ui.components.Brojac
+import com.mojtijek.doktor.ui.components.DatumVrijemeRedak
+import com.mojtijek.doktor.ui.components.FormaDialog
+import com.mojtijek.doktor.ui.components.FormaOdjeljak
+import com.mojtijek.doktor.ui.components.MtCard
+import com.mojtijek.doktor.ui.components.Pill
+import com.mojtijek.doktor.ui.theme.Mt
+import java.text.DateFormat
+import java.util.Calendar
+import java.util.Date
+
+// Kalendar pregleda odabranog člana (iOS `FamilyCalendarView(focusClan:)`, `EventCard`, `EventForm`).
+// Još nema: zahtjev za uputnicu e-poštom i upis u Kalendar telefona.
+
+private fun dan(ms: Long): String = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(ms))
+
+/** Vrijeme događaja živi u `vrijeme` ("HH:mm"); `datum` može biti i ponoć (kopija s weba). */
+private fun trenutak(d: DogadjajEntity): Long {
+    val hm = d.vrijeme?.let { DoseSchedule.normalize(it) } ?: return d.datum
+    val c = Calendar.getInstance().apply { timeInMillis = d.datum }
+    if (c.get(Calendar.HOUR_OF_DAY) != 0 || c.get(Calendar.MINUTE) != 0) return d.datum
+    c.set(Calendar.HOUR_OF_DAY, hm.substringBefore(":").toInt()); c.set(Calendar.MINUTE, hm.substringAfter(":").toInt())
+    return c.timeInMillis
+}
 
 @Composable
-fun KalendarScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit = {}) {
-    val dogadjaji by vm.dogadjajiZaAktivnog().collectAsState(initial = emptyList())
+fun KalendarScreen(vm: MojTijekViewModel, onNavigateBack: () -> Unit) {
+    val clanovi by vm.clanovi.collectAsState()
     val aktivniId by vm.aktivniClanId.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
-    var selectedDogadjaj by remember { mutableStateOf<DogadjajEntity?>(null) }
+    val dogadjaji by remember(vm) { vm.dogadjajiZaAktivnog() }.collectAsState(initial = emptyList())
+    var novi by remember { mutableStateOf(false) }
+    var zaUrediti by remember { mutableStateOf<DogadjajEntity?>(null) }
 
-    val nadolazeciDogadjaji = remember(dogadjaji) {
-        dogadjaji.filter { it.datum >= System.currentTimeMillis() && it.status != "obavljeno" }
-            .sortedBy { it.datum }
-    }
-    
-    val prosliDogadjaji = remember(dogadjaji) {
-        dogadjaji.filter { it.datum < System.currentTimeMillis() || it.status == "obavljeno" }
-            .sortedByDescending { it.datum }
-    }
+    val danas = DoseSchedule.dayStart()
+    val nadolazece = dogadjaji.filter { it.datum >= danas && it.status != "otkazano" && it.status != "obavljeno" }.sortedBy { it.datum }
+    val proslo = dogadjaji.filter { (it.datum < danas || it.status == "obavljeno") && it.status != "otkazano" }.sortedByDescending { it.datum }.take(30)
+    val clanPoId = clanovi.associateBy { it.id }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Kalendar", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, "Natrag")
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showDialog = true },
-                shape = RoundedCornerShape(28.dp),
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Novi događaj")
-            }
-        }
-    ) { padding ->
-        if (dogadjaji.isEmpty()) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(32.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.Event,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        "Nema zakazanih događaja",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "Dodajte preglede, termine i važne događaje pomoću + gumba.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                if (nadolazeciDogadjaji.isNotEmpty()) {
-                    item {
-                        Text(
-                            "Nadolazeći",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    items(nadolazeciDogadjaji) { dogadjaj ->
-                        DogadjajCard(
-                            dogadjaj = dogadjaj,
-                            onClick = { selectedDogadjaj = dogadjaj },
-                            onDelete = { vm.obrisiDogadjaj(it) },
-                            onStatusChange = { updated -> vm.azurirajDogadjaj(updated) }
-                        )
-                    }
-                }
-                
-                if (prosliDogadjaji.isNotEmpty()) {
-                    item {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Prošli",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    items(prosliDogadjaji) { dogadjaj ->
-                        DogadjajCard(
-                            dogadjaj = dogadjaj,
-                            onClick = { selectedDogadjaj = dogadjaj },
-                            onDelete = { vm.obrisiDogadjaj(it) },
-                            onStatusChange = { updated -> vm.azurirajDogadjaj(updated) }
-                        )
-                    }
+    LazyColumn(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding(),
+               contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.natrag)) }
+                Text(stringResource(R.string.kalendar), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                IconButton(onClick = { novi = true }, enabled = clanovi.isNotEmpty()) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.novi_dogadjaj), tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
+        item { Text(stringResource(R.string.nadolazece), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
+        if (nadolazece.isEmpty()) item { MtCard { Text(stringResource(R.string.nema_dogadjaja), color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+        items(nadolazece, key = { it.id }) { d -> Kartica(d, clanPoId[d.clanId], vm) { zaUrediti = d } }
+        if (proslo.isNotEmpty()) {
+            item { Text(stringResource(R.string.proslo), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp)) }
+            items(proslo, key = { "p" + it.id }) { d -> Kartica(d, clanPoId[d.clanId], vm) { zaUrediti = d } }
+        }
     }
 
-    if (showDialog) {
-        NoviDogadjajDialog(
-            clanId = aktivniId ?: "",
-            onDismiss = { showDialog = false },
-            onSpremi = { dogadjaj ->
-                vm.dodajDogadjaj(dogadjaj)
-                showDialog = false
-            }
-        )
-    }
-
-    selectedDogadjaj?.let { dogadjaj ->
-        DogadjajDetaljiDialog(
-            dogadjaj = dogadjaj,
-            onDismiss = { selectedDogadjaj = null },
-            onUpdate = { updated ->
-                vm.azurirajDogadjaj(updated)
-                selectedDogadjaj = null
-            }
-        )
-    }
+    if (novi) Forma(null, clanovi, aktivniId, onOdustani = { novi = false }, onSpremi = { vm.dodajDogadjaj(it); novi = false })
+    zaUrediti?.let { d -> Forma(d, clanovi, d.clanId, onOdustani = { zaUrediti = null }, onSpremi = { vm.azurirajDogadjaj(it); zaUrediti = null }) }
 }
 
 @Composable
-private fun DogadjajCard(
-    dogadjaj: DogadjajEntity,
-    onClick: () -> Unit,
-    onDelete: (DogadjajEntity) -> Unit,
-    onStatusChange: (DogadjajEntity) -> Unit
-) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
+private fun Kartica(d: DogadjajEntity, clan: ClanEntity?, vm: MojTijekViewModel, onUredi: () -> Unit) {
+    var izbornik by remember { mutableStateOf(false) }
+    val obavljeno = d.status == "obavljeno"
+    fun prebaciObavljeno() = vm.azurirajDogadjaj(d.copy(status = if (obavljeno) "planirano" else "obavljeno"))
+    val boja = runCatching { Color(android.graphics.Color.parseColor(clan?.boja ?: "#0E9488")) }.getOrDefault(Mt.Teal)
 
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp
-    ) {
-        Row(
-            Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    when (dogadjaj.vrsta) {
-                        "pregled" -> Icons.Filled.MedicalServices
-                        "kontrola" -> Icons.Filled.FactCheck
-                        "cjepivo" -> Icons.Filled.Vaccines
-                        else -> Icons.Filled.Event
-                    },
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Spacer(Modifier.width(16.dp))
-
-            Column(Modifier.weight(1f)) {
-                Text(
-                    dogadjaj.naslov,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(4.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        SimpleDateFormat("d. MMM yyyy.", Locale("hr", "HR")).format(Date(dogadjaj.datum)),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    dogadjaj.vrijeme?.let {
-                        Text("·", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+    Box {
+        Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).combinedClickable(onClick = {}, onLongClick = { izbornik = true })) {
+            Row(Modifier.height(IntrinsicSize.Min)) {
+                Box(Modifier.width(5.dp).fillMaxHeight().background(boja))
+                Column(Modifier.weight(1f).padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(d.naslov, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Icon(if (obavljeno) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked, contentDescription = stringResource(R.string.oznaci_obavljeno),
+                             tint = if (obavljeno) Mt.Green else MaterialTheme.colorScheme.onSurfaceVariant,
+                             modifier = Modifier.size(26.dp).clip(CircleShape).clickable { prebaciObavljeno() })
                     }
-                }
-                
-                if (dogadjaj.uputnicaIzdana) {
-                    Spacer(Modifier.height(6.dp))
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            "Uputnica",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                if (dogadjaj.status != "obavljeno") {
-                    IconButton(onClick = {
-                        onStatusChange(dogadjaj.copy(status = "obavljeno"))
-                    }) {
-                        Icon(
-                            Icons.Filled.CheckCircleOutline,
-                            contentDescription = "Označi obavljenim",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                IconButton(onClick = { showDeleteDialog = true }) {
-                    Icon(
-                        Icons.Filled.Delete,
-                        contentDescription = "Obriši",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Obriši događaj?") },
-            text = { Text("Jeste li sigurni da želite obrisati ovaj događaj?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDelete(dogadjaj)
-                    showDeleteDialog = false
-                }) {
-                    Text("Obriši", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Odustani")
-                }
-            }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NoviDogadjajDialog(
-    clanId: String,
-    onDismiss: () -> Unit,
-    onSpremi: (DogadjajEntity) -> Unit
-) {
-    var naslov by remember { mutableStateOf("") }
-    var vrsta by remember { mutableStateOf("pregled") }
-    var datum by remember { mutableStateOf(System.currentTimeMillis()) }
-    var vrijeme by remember { mutableStateOf("") }
-    var lokacija by remember { mutableStateOf("") }
-    var napomena by remember { mutableStateOf("") }
-    var uputnicaPotrebna by remember { mutableStateOf(false) }
-    var expanded by remember { mutableStateOf(false) }
-
-    val vrste = listOf("pregled", "kontrola", "cjepivo", "termin", "ostalo")
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Novi događaj") },
-        text = {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    OutlinedTextField(
-                        value = naslov,
-                        onValueChange = { naslov = it },
-                        label = { Text("Naziv događaja") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = vrsta.replaceFirstChar { it.uppercase() },
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Vrsta") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            vrste.forEach { v ->
-                                DropdownMenuItem(
-                                    text = { Text(v.replaceFirstChar { it.uppercase() }) },
-                                    onClick = {
-                                        vrsta = v
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = vrijeme,
-                        onValueChange = { vrijeme = it },
-                        label = { Text("Vrijeme (npr. 10:30)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = lokacija,
-                        onValueChange = { lokacija = it },
-                        label = { Text("Lokacija") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = napomena,
-                        onValueChange = { napomena = it },
-                        label = { Text("Napomena") },
-                        maxLines = 3,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Potrebna uputnica", style = MaterialTheme.typography.bodyMedium)
-                        Switch(
-                            checked = uputnicaPotrebna,
-                            onCheckedChange = { uputnicaPotrebna = it }
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                if (naslov.isNotBlank()) {
-                    onSpremi(
-                        DogadjajEntity(
-                            clanId = clanId,
-                            naslov = naslov,
-                            vrsta = vrsta,
-                            datum = datum,
-                            vrijeme = vrijeme.ifBlank { null },
-                            lokacija = lokacija.ifBlank { null },
-                            napomena = napomena.ifBlank { null },
-                            uputnicaPotrebna = uputnicaPotrebna,
-                            status = "planirano"
-                        )
-                    )
-                }
-            }) {
-                Text("Spremi")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Odustani")
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DogadjajDetaljiDialog(
-    dogadjaj: DogadjajEntity,
-    onDismiss: () -> Unit,
-    onUpdate: (DogadjajEntity) -> Unit
-) {
-    var naslov by remember { mutableStateOf(dogadjaj.naslov) }
-    var vrsta by remember { mutableStateOf(dogadjaj.vrsta) }
-    var vrijeme by remember { mutableStateOf(dogadjaj.vrijeme ?: "") }
-    var lokacija by remember { mutableStateOf(dogadjaj.lokacija ?: "") }
-    var napomena by remember { mutableStateOf(dogadjaj.napomena ?: "") }
-    var priprema by remember { mutableStateOf(dogadjaj.priprema ?: "") }
-    var uputnicaPotrebna by remember { mutableStateOf(dogadjaj.uputnicaPotrebna) }
-    var uputnicaIzdana by remember { mutableStateOf(dogadjaj.uputnicaIzdana) }
-    var expanded by remember { mutableStateOf(false) }
-
-    val vrste = listOf("pregled", "kontrola", "cjepivo", "termin", "ostalo")
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Detalji događaja") },
-        text = {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    OutlinedTextField(
-                        value = naslov,
-                        onValueChange = { naslov = it },
-                        label = { Text("Naziv događaja") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        OutlinedTextField(
-                            value = vrsta.replaceFirstChar { it.uppercase() },
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Vrsta") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            vrste.forEach { v ->
-                                DropdownMenuItem(
-                                    text = { Text(v.replaceFirstChar { it.uppercase() }) },
-                                    onClick = {
-                                        vrsta = v
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = vrijeme,
-                        onValueChange = { vrijeme = it },
-                        label = { Text("Vrijeme (npr. 10:30)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = lokacija,
-                        onValueChange = { lokacija = it },
-                        label = { Text("Lokacija") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = priprema,
-                        onValueChange = { priprema = it },
-                        label = { Text("Priprema") },
-                        maxLines = 3,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = napomena,
-                        onValueChange = { napomena = it },
-                        label = { Text("Napomena") },
-                        maxLines = 3,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Potrebna uputnica", style = MaterialTheme.typography.bodyMedium)
-                        Switch(
-                            checked = uputnicaPotrebna,
-                            onCheckedChange = { uputnicaPotrebna = it }
-                        )
-                    }
-                }
-
-                if (uputnicaPotrebna) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Uputnica izdana", style = MaterialTheme.typography.bodyMedium)
-                            Switch(
-                                checked = uputnicaIzdana,
-                                onCheckedChange = { uputnicaIzdana = it }
-                            )
+                    Text(listOfNotNull(clan?.ime, dan(d.datum), d.vrijeme?.takeIf { it.isNotBlank() }, d.lokacija?.takeIf { it.isNotBlank() }).joinToString(" · "),
+                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    d.priprema?.takeIf { it.isNotBlank() }?.let { Text("📋 $it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary) }
+                    d.vozac?.takeIf { it.isNotBlank() }?.let { Text("🚗 $it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    if (d.uputnicaPotrebna && !d.uputnicaIzdana) {
+                        if (d.uputnicaZatrazena) {
+                            Pill(stringResource(R.string.ceka_uputnica_oznaci), Mt.Orange,
+                                 Modifier.clip(CircleShape).clickable { vm.azurirajDogadjaj(d.copy(uputnicaIzdana = true)) })
+                        } else {
+                            Pill(stringResource(R.string.treba_uputnica), Mt.Orange)
                         }
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                if (naslov.isNotBlank()) {
-                    onUpdate(
-                        dogadjaj.copy(
-                            naslov = naslov,
-                            vrsta = vrsta,
-                            vrijeme = vrijeme.ifBlank { null },
-                            lokacija = lokacija.ifBlank { null },
-                            priprema = priprema.ifBlank { null },
-                            napomena = napomena.ifBlank { null },
-                            uputnicaPotrebna = uputnicaPotrebna,
-                            uputnicaIzdana = uputnicaIzdana
-                        )
-                    )
-                }
-            }) {
-                Text("Spremi")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Zatvori")
-            }
         }
-    )
+        DropdownMenu(expanded = izbornik, onDismissRequest = { izbornik = false }) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.uredi_dogadjaj_izbornik)) }, onClick = { izbornik = false; onUredi() })
+            DropdownMenuItem(text = { Text(stringResource(if (obavljeno) R.string.vrati_u_planirano else R.string.oznaci_obavljeno)) },
+                             onClick = { izbornik = false; prebaciObavljeno() })
+            if (d.uputnicaPotrebna) {
+                DropdownMenuItem(text = { Text(stringResource(if (d.uputnicaIzdana) R.string.uputnica_nije_izdana else R.string.uputnica_je_izdana)) }, onClick = {
+                    izbornik = false
+                    // Poništavanje vraća na početak: ni zatražena ni izdana.
+                    vm.azurirajDogadjaj(if (d.uputnicaIzdana) d.copy(uputnicaIzdana = false, uputnicaZatrazena = false) else d.copy(uputnicaIzdana = true))
+                })
+            }
+            DropdownMenuItem(text = { Text(stringResource(R.string.obrisi), color = Mt.Red) }, onClick = { izbornik = false; vm.obrisiDogadjaj(d) })
+        }
+    }
+}
+
+@Composable
+private fun Forma(pocetni: DogadjajEntity?, clanovi: List<ClanEntity>, odabraniClan: String?, onOdustani: () -> Unit, onSpremi: (DogadjajEntity) -> Unit) {
+    var clanId by remember { mutableStateOf(odabraniClan?.takeIf { id -> clanovi.any { it.id == id } } ?: clanovi.firstOrNull()?.id) }
+    var naslov by remember { mutableStateOf(pocetni?.naslov ?: "") }
+    var datum by remember { mutableStateOf(pocetni?.let { trenutak(it) } ?: System.currentTimeMillis()) }
+    var lokacija by remember { mutableStateOf(pocetni?.lokacija ?: "") }
+    var uputnica by remember { mutableStateOf(pocetni?.uputnicaPotrebna ?: false) }
+    var priprema by remember { mutableStateOf(pocetni?.priprema ?: "") }
+    var dana by remember { mutableStateOf(maxOf(0, pocetni?.podsjetnikDana ?: 3)) }
+    var vozac by remember { mutableStateOf(pocetni?.vozac ?: "") }
+    var biracClana by remember { mutableStateOf(false) }
+
+    FormaDialog(stringResource(if (pocetni == null) R.string.novi_dogadjaj else R.string.uredi_dogadjaj),
+                valjano = naslov.isNotBlank() && clanId != null, onOdustani = onOdustani, onSpremi = {
+        val id = clanId ?: return@FormaDialog
+        val c = Calendar.getInstance().apply { timeInMillis = datum }
+        val osnova = pocetni ?: DogadjajEntity(clanId = id)
+        onSpremi(osnova.copy(clanId = id, naslov = naslov.trim(), datum = datum,
+                             vrijeme = "%02d:%02d".format(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE)),
+                             lokacija = lokacija.trim().ifEmpty { null }, priprema = priprema.trim().ifEmpty { null },
+                             uputnicaPotrebna = uputnica, podsjetnikDana = dana, vozac = vozac.trim().ifEmpty { null }))
+    }) {
+        FormaOdjeljak(stringResource(R.string.pregled)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.clan), Modifier.weight(1f))
+                Box {
+                    TextButton(onClick = { biracClana = true }) { Text(clanovi.firstOrNull { it.id == clanId }?.ime ?: "—") }
+                    DropdownMenu(expanded = biracClana, onDismissRequest = { biracClana = false }) {
+                        clanovi.forEach { c -> DropdownMenuItem(text = { Text(c.ime) }, onClick = { clanId = c.id; biracClana = false }) }
+                    }
+                }
+            }
+            OutlinedTextField(naslov, { naslov = it }, label = { Text(stringResource(R.string.naziv_pregleda)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            DatumVrijemeRedak(stringResource(R.string.datum_i_vrijeme), datum) { datum = it }
+            OutlinedTextField(lokacija, { lokacija = it }, label = { Text(stringResource(R.string.lokacija)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        }
+        FormaOdjeljak(stringResource(R.string.priprema)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.treba_uputnica), Modifier.weight(1f))
+                Switch(checked = uputnica, onCheckedChange = { uputnica = it })
+            }
+            OutlinedTextField(priprema, { priprema = it }, label = { Text(stringResource(R.string.priprema_pretrage)) }, modifier = Modifier.fillMaxWidth())
+        }
+        FormaOdjeljak(stringResource(R.string.podsjetnik)) {
+            Brojac(stringResource(R.string.podsjeti_dana_ranije, dana), dana, 0..30) { dana = it }
+            OutlinedTextField(vozac, { vozac = it }, label = { Text(stringResource(R.string.tko_vozi)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            Text(if (dana == 0) stringResource(R.string.podsjetnik_na_dan) else stringResource(R.string.podsjetnik_dana_prije, dana),
+                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }
