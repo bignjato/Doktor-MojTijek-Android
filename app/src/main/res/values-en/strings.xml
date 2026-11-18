@@ -315,4 +315,18 @@
     <string name="podsjetnik_dana_prije">The reminder arrives at 9 a.m., %1$d days before the appointment.</string>
     <string name="novi_dogadjaj">New event</string>
     <string name="uredi_dogadjaj">Edit event</string>
+    <string name="pod_lijek">💊 Time for your medicine</string>
+    <string name="pod_recept">📄 Prescription expiring</string>
+    <string name="pod_pri_kraju">📦 Medicine running low</string>
+    <string name="pod_cijepljenje">💉 Vaccination</string>
+    <string name="pod_pregled">📅 Upcoming appointment</string>
+    <string name="podsjetnici">Reminders</string>
+    <string name="obavijesti_i_terapije">Notifications and medications</string>
+    <string name="pod_recept_tekst">%1$s: prescription for %2$s is valid until %3$s.</string>
+    <string name="pod_narudzba_tekst">%1$s: %2$s %3$s — time to reorder</string>
+    <string name="pod_cjepivo_tekst">%1$s: next dose — %2$s (%3$s).</string>
+    <string name="pod_u_vrijeme"> at %1$s</string>
+    <string name="pod_priprema"> Preparation: %1$s</string>
+    <string name="obavijesti_nedopustene">Notifications are not allowed in the phone settings.</string>
+    <string name="podsjetnici_napomena">A reminder may arrive a few minutes after the set time, especially while the phone is saving battery.</string>
 </resources>

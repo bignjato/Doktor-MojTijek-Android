@@ -7,7 +7,7 @@ Stanje grane `android-1.0` na dan 2026-11-17. „Ekran” = postoji unos/pregled
 | Obitelj, profil člana | da | ekran | uređivanje je brisalo podatke člana — popravljeno |
 | Terapije, raspored, tjedne doze | da | da | raspored prenesen; zaliha se troši pri potvrdi |
 | Potvrda doze, adherencija | da | da | jedan zapis po dozi; nema povijesti izmjena (audit) |
-| Podsjetnici za doze i termine | da | **ne** | bio je samo kostur koji ništa nije zakazivao |
+| Podsjetnici za doze i termine | da | da | doze, recept, pri kraju, cjepivo, pregled; alarmi nisu točni (mogu kasniti nekoliko minuta); nema „Uzeto” u obavijesti ni odgode; nije isprobano na uređaju |
 | Zaliha, „pri kraju”, narudžba lijekova | da | djelomično | nema narudžbe e-mailom ni 30/60/90 |
 | Kartoteka: dokumenti (PDF, sken, foto) | da | djelomično | PDF i slike iz datoteka/galerije, otvaranje u aplikaciji; nema skeniranja ni slanja |
 | AI čitanje/objašnjenje nalaza (privola) | da | **ne** | ai-proxy traži App Attest → treba Play Integrity put |

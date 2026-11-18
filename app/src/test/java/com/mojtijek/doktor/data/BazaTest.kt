@@ -164,6 +164,38 @@ class BazaTest {
         assertEquals(listOf("B"), repo.clanovi.first().map { it.ime })
     }
 
+    /** Plan podsjetnika: uzeta doza i neaktivan član ne dobivaju podsjetnik; tjedna terapija samo svoj dan; pregled N dana ranije u 9 h. */
+    @Test fun planPodsjetnika() {
+        val sada = dan + 10 * 3_600_000L                       // danas u 10:00
+        fun uDan(pomak: Int, sat: Int) = dan + pomak * 86_400_000L + sat * 3_600_000L
+        val a = ClanEntity(ime = "A"); val neaktivan = ClanEntity(ime = "N", aktivan = false)
+        val dnevna = TerapijaEntity(clanId = a.id, naziv = "D", vremena = "08:00,20:00")
+        val tudja = TerapijaEntity(clanId = neaktivan.id, naziv = "X", vremena = "12:00")
+        val uzeta = UzimanjeEntity(terapijaId = dnevna.id, clanId = a.id, datum = dan, slot = "20:00")
+        val pregled = DogadjajEntity(clanId = a.id, naslov = "Kardiolog", datum = uDan(5, 14), podsjetnikDana = 3)
+        val blizu = DogadjajEntity(clanId = a.id, naslov = "Sutra", datum = uDan(1, 14), podsjetnikDana = 3)
+        val obavljen = DogadjajEntity(clanId = a.id, naslov = "Gotov", datum = uDan(4, 14), status = "obavljeno")
+        val cjepivo = CijepljenjeEntity(clanId = a.id, naziv = "Gripa", sljedece = uDan(20, 0))
+
+        val plan = PodsjetniciPlan.plan(listOf(a, neaktivan), listOf(dnevna, tudja), listOf(uzeta), listOf(pregled, blizu, obavljen), listOf(cjepivo), sada)
+        val doze = plan.filter { it.vrsta == "doza" }
+        assertTrue("ništa u prošlosti", plan.all { it.kada > sada })
+        assertTrue("neaktivan član", plan.none { it.clan.id == neaktivan.id })
+        assertEquals("danas 08:00 prošlo, 20:00 uzeto → prva je sutra u 8", uDan(1, 8), doze.first().kada)
+        assertEquals(7 * 2, doze.size)
+        assertEquals(uDan(2, 9), plan.single { it.id == "pregled-${pregled.id}" }.kada)
+        assertEquals("termin bliži od zadanih dana → sutra u 9", uDan(1, 9), plan.single { it.id == "pregled-${blizu.id}" }.kada)
+        assertTrue(plan.none { it.id == "pregled-${obavljen.id}" })
+        assertEquals(uDan(13, 9), plan.single { it.vrsta == "cjepivo" }.kada)
+
+        // Tjedna terapija: jedan podsjetnik u idućih tjedan dana (osam dana pokriva isti dan dvaput samo ako je danas njezin dan).
+        val danDanas = java.util.Calendar.getInstance().apply { timeInMillis = sada }.get(java.util.Calendar.DAY_OF_WEEK)
+        val tjedna = TerapijaEntity(clanId = a.id, naziv = "T", vremena = "08:00", danUTjednu = danDanas % 7 + 1, kolicina = 1.0, zalihaSet = true, pragDana = 30)
+        val p2 = PodsjetniciPlan.plan(listOf(a), listOf(tjedna), emptyList(), emptyList(), emptyList(), sada)
+        assertEquals(listOf(uDan(1, 8)), p2.filter { it.vrsta == "doza" }.map { it.kada })
+        assertEquals("pri kraju → sutra u 9 (danas je 9 h prošlo)", uDan(1, 9), p2.single { it.vrsta == "narudzba" }.kada)
+    }
+
     @Test fun napuniINaruceno() = runBlocking {
         val clan = ClanEntity(ime = "Test"); repo.upsertClan(clan)
         val t = TerapijaEntity(clanId = clan.id, naziv = "Lijek", vremena = "08:00", kolicina = 2.0, komPoKutiji = 28.0); repo.upsertTerapija(t)

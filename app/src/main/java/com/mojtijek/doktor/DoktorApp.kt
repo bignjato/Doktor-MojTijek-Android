@@ -17,6 +17,9 @@ class DoktorApp : Application() {
         super.onCreate()
         val db = MojTijekDatabase.getInstance(this)
         repository = MojTijekRepository(db, Datoteke(filesDir))
+        // Podsjetnici prate podatke: svaka promjena terapije, doze, termina ili cijepljenja obnavlja plan.
+        repository.priPromjeniPodsjetnika { Podsjetnici.osvjeziUskoro(this) }
+        Podsjetnici.osvjeziUskoro(this)
 
         val localModule = module {
             single { repository }

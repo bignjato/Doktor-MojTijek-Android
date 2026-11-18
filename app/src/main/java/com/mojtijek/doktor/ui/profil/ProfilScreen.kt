@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Vaccines
@@ -43,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -59,6 +61,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mojtijek.doktor.Podsjetnici
 import com.mojtijek.doktor.R
 import com.mojtijek.doktor.data.Kopija
 import com.mojtijek.doktor.ui.MojTijekViewModel
@@ -76,7 +79,7 @@ import java.util.Locale
 // Ekran „Profil” — isti redoslijed odjeljaka kao iOS ProfileView:
 // član → Obitelj → Izgled → Povezivanje i podaci → Aplikacija → Demo.
 // Redak iza kojeg na Androidu još nema ekrana se ne prikazuje (Premium, Izvještaji, ICE, sažetak za liječnika,
-// zaključavanje, privole, povijest promjena, podsjetnici, vodič, uklanjanje demo podataka).
+// zaključavanje, privole, povijest promjena, pragovi upozorenja, vodič, uklanjanje demo podataka).
 // Cijepljenja su zaseban ekran; uređivanje člana je ista forma kao za novog člana.
 
 private fun verzija(context: Context): String = try {
@@ -127,6 +130,13 @@ fun ProfilScreen(vm: MojTijekViewModel) {
     val nevaljana = stringResource(R.string.kopija_nevaljana)
     val neuspjelo = stringResource(R.string.kopija_neuspjelo)
 
+    var obavijesti by remember { mutableStateOf(Podsjetnici.ukljuceni(context) && Podsjetnici.smijeObavijesti(context)) }
+    val nedopusteno = stringResource(R.string.obavijesti_nedopustene)
+    val dozvolaObavijesti = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { odobreno ->
+        obavijesti = odobreno
+        Podsjetnici.postavi(context, odobreno)
+        if (!odobreno) poruka = nedopusteno
+    }
     val izvoz = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri != null) scope.launch {
             radi = true
@@ -213,6 +223,18 @@ fun ProfilScreen(vm: MojTijekViewModel) {
             Crta()
             Redak(Icons.Filled.FileUpload, stringResource(R.string.kopija_naslov)) { pitajKopiju = true }
             if (radi) LinearProgressIndicator(Modifier.fillMaxWidth())
+        }
+
+        Odjeljak(stringResource(R.string.podsjetnici), napomena = stringResource(R.string.podsjetnici_napomena)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Icon(Icons.Filled.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                Text(stringResource(R.string.obavijesti_i_terapije), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                Switch(checked = obavijesti, onCheckedChange = { ukljuci ->
+                    if (ukljuci && !Podsjetnici.smijeObavijesti(context)) dozvolaObavijesti.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                    else { obavijesti = ukljuci; Podsjetnici.postavi(context, ukljuci) }
+                })
+            }
         }
 
         Odjeljak(stringResource(R.string.aplikacija), napomena = stringResource(R.string.o_aplikaciji_napomena)) {

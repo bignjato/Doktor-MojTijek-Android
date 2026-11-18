@@ -12,6 +12,18 @@ class MojTijekRepository(private val db: MojTijekDatabase, private val datoteke:
 
     val clanovi: Flow<List<ClanEntity>> get() = db.clanDao().observeAll()
 
+    suspend fun planPodsjetnika(sada: Long): List<PodsjetniciPlan.Stavka> {
+        val k = db.kopijaDao()
+        return PodsjetniciPlan.plan(k.clanovi(), k.terapije(), k.uzimanja(), k.dogadjaji(), k.cijepljenja(), sada)
+    }
+
+    /** Javlja svaku promjenu podataka o kojima ovise podsjetnici. */
+    fun priPromjeniPodsjetnika(javi: () -> Unit) {
+        db.invalidationTracker.addObserver(object : androidx.room.InvalidationTracker.Observer(arrayOf("clan", "terapija", "uzimanje", "dogadjaj", "cijepljenje")) {
+            override fun onInvalidated(tables: Set<String>) = javi()
+        })
+    }
+
     suspend fun upsertClan(clan: ClanEntity) = db.clanDao().upsert(clan)
     /** Briše člana i sve njegovo (kaskadno u bazi) te datoteke njegovih dokumenata i fotografije lijekova. */
     suspend fun deleteClan(clan: ClanEntity) {

@@ -315,4 +315,18 @@
     <string name="podsjetnik_dana_prije">Die Erinnerung kommt um 9 Uhr, %1$d Tage vor dem Termin.</string>
     <string name="novi_dogadjaj">Neuer Termin</string>
     <string name="uredi_dogadjaj">Termin bearbeiten</string>
+    <string name="pod_lijek">💊 Zeit für das Medikament</string>
+    <string name="pod_recept">📄 Rezept läuft ab</string>
+    <string name="pod_pri_kraju">📦 Medikament geht zur Neige</string>
+    <string name="pod_cijepljenje">💉 Impfung</string>
+    <string name="pod_pregled">📅 Bevorstehender Termin</string>
+    <string name="podsjetnici">Erinnerungen</string>
+    <string name="obavijesti_i_terapije">Benachrichtigungen und Medikamente</string>
+    <string name="pod_recept_tekst">%1$s: das Rezept für %2$s gilt bis %3$s.</string>
+    <string name="pod_narudzba_tekst">%1$s: %2$s %3$s — Zeit zum Nachbestellen</string>
+    <string name="pod_cjepivo_tekst">%1$s: nächste Dosis — %2$s (%3$s).</string>
+    <string name="pod_u_vrijeme"> um %1$s</string>
+    <string name="pod_priprema"> Vorbereitung: %1$s</string>
+    <string name="obavijesti_nedopustene">Benachrichtigungen sind in den Telefoneinstellungen nicht erlaubt.</string>
+    <string name="podsjetnici_napomena">Eine Erinnerung kann einige Minuten nach der eingestellten Zeit eintreffen, besonders wenn das Telefon Akku spart.</string>
 </resources>
