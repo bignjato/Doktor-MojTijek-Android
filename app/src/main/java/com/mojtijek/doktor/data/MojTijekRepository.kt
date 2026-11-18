@@ -13,7 +13,38 @@ class MojTijekRepository(private val db: MojTijekDatabase, private val datoteke:
     val clanovi: Flow<List<ClanEntity>> get() = db.clanDao().observeAll()
 
     suspend fun upsertClan(clan: ClanEntity) = db.clanDao().upsert(clan)
-    suspend fun deleteClan(clan: ClanEntity) = db.clanDao().delete(clan)
+    /** Briše člana i sve njegovo (kaskadno u bazi) te datoteke njegovih dokumenata i fotografije lijekova. */
+    suspend fun deleteClan(clan: ClanEntity) {
+        val dokumenti = db.dokumentDao().observeByClan(clan.id).first()
+        val terapije = db.terapijaDao().observeAllByClan(clan.id).first()
+        db.clanDao().delete(clan)
+        dokumenti.forEach { datoteke.dokument(it.id).delete() }
+        terapije.forEach { datoteke.lijek(it.id).delete() }
+    }
+
+    /** Spremanje iz forme člana (iOS Add/EditMemberView): težina se upisuje kao mjerenje samo ako se razlikuje od zadnje. */
+    suspend fun spremiClana(clan: ClanEntity, tezina: Double?) = db.withTransaction {
+        db.clanDao().upsert(clan)
+        if (tezina != null && tezina > 0) {
+            val zadnja = db.mjerenjeDao().observeByClan(clan.id).first().filter { it.tip == "tezina" }.maxByOrNull { it.ts }?.vrijednost
+            if (zadnja == null || Math.abs(zadnja - tezina) > 0.001) {
+                val sada = System.currentTimeMillis()
+                db.mjerenjeDao().upsert(MjerenjeEntity(clanId = clan.id, tip = "tezina", vrijednost = tezina, jedinica = "kg", ts = sada, datum = sada))
+            }
+        }
+    }
+
+    /** Pomakni člana gore (-1) ili dolje (+1) i renumeriraj redoslijed svima. */
+    suspend fun pomakniClana(clanId: String, smjer: Int) = db.withTransaction {
+        val svi = db.clanDao().observeAll().first().toMutableList()
+        val i = svi.indexOfFirst { it.id == clanId }
+        val j = i + smjer
+        if (i < 0 || j !in svi.indices) return@withTransaction
+        java.util.Collections.swap(svi, i, j)
+        svi.forEachIndexed { idx, c -> if (c.redoslijed != idx) db.clanDao().upsert(c.copy(redoslijed = idx)) }
+    }
+
+    suspend fun deleteCijepljenje(c: CijepljenjeEntity) = db.cijepljenjeDao().delete(c)
     suspend fun clanCount() = db.clanDao().count()
 
     fun terapijeAktivne(clanId: String): Flow<List<TerapijaEntity>> = db.terapijaDao().observeByClan(clanId)

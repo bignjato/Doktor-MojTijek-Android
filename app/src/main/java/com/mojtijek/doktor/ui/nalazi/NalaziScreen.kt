@@ -329,7 +329,7 @@ fun NalaziScreen(vm: MojTijekViewModel, onNavigateBack: (() -> Unit)? = null) {
         }
     }
 
-    if (obitelj && clan != null) ObiteljSheet(clanovi, clan.id, onOdabir = { vm.odaberiClana(it) }, onZatvori = { obitelj = false })
+    if (obitelj && clan != null) ObiteljSheet(vm, clanovi, clan.id) { obitelj = false }
     greska?.let {
         AlertDialog(onDismissRequest = { greska = null }, title = { Text(stringResource(R.string.greska)) }, text = { Text(it) },
                     confirmButton = { TextButton(onClick = { greska = null }) { Text(stringResource(R.string.u_redu)) } })

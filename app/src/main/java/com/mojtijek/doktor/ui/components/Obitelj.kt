@@ -39,27 +39,6 @@ import androidx.compose.ui.unit.dp
 import com.mojtijek.doktor.R
 import com.mojtijek.doktor.data.ClanEntity
 
-/** Izbor člana obitelji (iOS `FamilyPickerView`). */
-@Composable
-fun ObiteljSheet(clanovi: List<ClanEntity>, odabraniId: String, onOdabir: (String) -> Unit, onZatvori: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onZatvori) {
-        Column(Modifier.padding(horizontal = 16.dp).navigationBarsPadding()) {
-            Text(stringResource(R.string.obitelj), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            clanovi.forEach { c ->
-                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onOdabir(c.id); onZatvori() }
-                        .padding(vertical = 10.dp, horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MemberAvatar(c, 40.dp)
-                    Text(c.ime, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                    if (c.id == odabraniId) Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-        }
-    }
-}
-
 /** Kartica s imenom člana i padajućim popisom (iOS `memberPicker`). */
 @Composable
 fun IzbornikClana(clan: ClanEntity, clanovi: List<ClanEntity>, onOdabir: (String) -> Unit) {

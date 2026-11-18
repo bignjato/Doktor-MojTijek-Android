@@ -79,6 +79,7 @@ import com.mojtijek.doktor.data.DoseSchedule
 import com.mojtijek.doktor.data.MjerenjeEntity
 import com.mojtijek.doktor.data.TerapijaEntity
 import com.mojtijek.doktor.ui.MojTijekViewModel
+import com.mojtijek.doktor.ui.components.ClanForma
 import com.mojtijek.doktor.ui.components.MemberAvatar
 import com.mojtijek.doktor.ui.components.MtCard
 import com.mojtijek.doktor.ui.components.ObiteljSheet
@@ -167,7 +168,7 @@ fun HomeScreen(
              modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
     }
 
-    if (obitelj) ObiteljSheet(clanovi, clan.id, onOdabir = { vm.odaberiClana(it) }, onZatvori = { obitelj = false })
+    if (obitelj) ObiteljSheet(vm, clanovi, clan.id) { obitelj = false }
     if (novoMjerenje) {
         NovoMjerenjeDialog(clanId = clan.id, onDismiss = { novoMjerenje = false },
                            onSpremi = { vm.dodajMjerenje(it); novoMjerenje = false })
@@ -518,18 +519,5 @@ private fun PrviKoraci(vm: MojTijekViewModel) {
         }
         TextButton(onClick = { vm.dodajSeedData() }) { Text(stringResource(R.string.ucitaj_demo)) }
     }
-    if (noviClan) {
-        var ime by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { noviClan = false },
-            title = { Text(stringResource(R.string.dodaj_clana)) },
-            text = { OutlinedTextField(ime, { ime = it }, label = { Text(stringResource(R.string.ime)) }, singleLine = true) },
-            confirmButton = {
-                TextButton(onClick = { vm.dodajClana(ime.trim()); noviClan = false }, enabled = ime.isNotBlank()) {
-                    Text(stringResource(R.string.spremi))
-                }
-            },
-            dismissButton = { TextButton(onClick = { noviClan = false }) { Text(stringResource(R.string.odustani)) } },
-        )
-    }
+    if (noviClan) ClanForma(null, onOdustani = { noviClan = false }, onSpremi = { c, tezina -> vm.spremiClana(c, tezina, novi = true); noviClan = false })
 }
