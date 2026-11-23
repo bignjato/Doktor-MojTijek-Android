@@ -8,13 +8,13 @@ plugins {
 
 android {
     namespace = "com.mojtijek.doktor"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         // Isti identitet kao iOS. Nakon prve objave na Playu se ne može promijeniti.
         applicationId = "hr.infobot.mojtijek"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         // Broj builda daje CI (redni broj pokretanja); veći broj = noviji build. Lokalno iz Android Studija: 1 / „lokalno”.
         val build = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull()
         versionCode = build ?: 1
@@ -95,8 +95,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
-    // 1.1.0 (stabilna) traži compileSdk 36 i AGP 8.9.1; podići zajedno s AGP-om prije objave na Playu.
-    implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
+    implementation("androidx.health.connect:connect-client:1.1.0")
 
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.compose.ui:ui")
