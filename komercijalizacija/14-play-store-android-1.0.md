@@ -147,7 +147,7 @@ Ažurirati `https://infobot.hr/mojtijek/privatnost/` da uključuje:
 | Debug/testni APK | `mojtijek-dev` | GitHub secret `DEV_KEYSTORE_B64` |
 | Upload za Play | `mojtijek-upload` | GitHub secret `UPLOAD_KEYSTORE_B64` |
 
-SHA-256 otisak upload ključa: `14:2A:2C:F3:A9:E3:0C:C1:50:58:2E:ED:87:65:6B:71:17:1A:A9:DF:3B:13:15:A0:89:99:CC:B6:EA:EC:EF:0B`
+SHA-256 otisak upload ključa: `EB:AC:AD:57:1D:36:09:33:38:1B:35:C8:F4:7B:CF:57:E7:3B:6C:B8:4F:19:8E:6C:E4:14:F4:E3:BE:9C:CD:44`
 | App Signing (release) | — | Google Play (ne izlazi van) |
 
 ---
