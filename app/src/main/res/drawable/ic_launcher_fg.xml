@@ -2,8 +2,13 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <group android:scaleX="0.4" android:scaleY="0.4" android:translateX="32.4" android:translateY="32.4">
-        <path android:fillColor="#FFFFFF" android:pathData="M54,27C38.5,27 26,39.5 26,55C26,70.5 38.5,83 54,83C69.5,83 82,70.5 82,55C82,39.5 69.5,27 54,27ZM54,35C65,35 74,44 74,55C74,66 65,75 54,75C43,75 34,66 34,55C34,44 43,35 54,35Z"/>
-        <path android:fillColor="#FFFFFF" android:pathData="M54,43L54,55L66,55"/>
-    </group>
+    <!-- Slovo M: dva stupa + V-spoj; sigurna zona adaptive ikone 72×72dp (margina 18dp) -->
+    <!-- lijevi stup -->
+    <path android:fillColor="#FFFFFF" android:pathData="M26,28 L34,28 L34,80 L26,80 Z"/>
+    <!-- desni stup -->
+    <path android:fillColor="#FFFFFF" android:pathData="M74,28 L82,28 L82,80 L74,80 Z"/>
+    <!-- lijeva kosa crta V -->
+    <path android:fillColor="#FFFFFF" android:pathData="M26,28 L54,58 L46,58 L26,36 Z"/>
+    <!-- desna kosa crta V -->
+    <path android:fillColor="#FFFFFF" android:pathData="M82,28 L54,58 L62,58 L82,36 Z"/>
 </vector>

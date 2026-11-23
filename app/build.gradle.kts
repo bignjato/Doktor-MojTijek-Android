@@ -25,9 +25,17 @@ android {
         }
     }
 
-    // Testni buildovi iz CI-ja potpisani su stalnim ključem (GitHub secret), pa se novi APK instalira preko starog
-    // bez gubitka podataka. Bez ključa (lokalno, fork) vrijedi zadani debug ključ računala. Ovo NIJE ključ za Play.
+    // Release (Play upload): ključ iz GitHub secrets UPLOAD_KEYSTORE_B64 / UPLOAD_KEY_PASSWORD.
+    // Debug/testni: NIJE isti ključ — DEV_KEYSTORE_B64. Detalji: komercijalizacija/14-play-store-android-1.0.md.
     signingConfigs {
+        val uploadKs = System.getenv("UPLOAD_KEYSTORE")
+        if (uploadKs != null && file(uploadKs).exists()) create("upload") {
+            storeFile = file(uploadKs)
+            storeType = "PKCS12"
+            storePassword = System.getenv("UPLOAD_STORE_PASSWORD")
+            keyAlias = System.getenv("UPLOAD_KEY_ALIAS") ?: "mojtijek-upload"
+            keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+        }
         val ks = System.getenv("DEV_KEYSTORE")
         if (ks != null && file(ks).exists()) getByName("debug") {
             storeFile = file(ks)
@@ -40,11 +48,15 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 minifikacija za Play (manji AAB, teži obrnuti inženjering)
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            val uploadSC = signingConfigs.findByName("upload")
+            if (uploadSC != null) signingConfig = uploadSC
         }
     }
 
@@ -70,6 +82,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
