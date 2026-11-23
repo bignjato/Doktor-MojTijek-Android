@@ -45,7 +45,7 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
-      - name: Ključ za potpis testnih buildova
+      - name: Ključ za testni debug APK
         env:
           DEV_KEYSTORE_B64: ${{ secrets.DEV_KEYSTORE_B64 }}
         run: |
@@ -54,35 +54,70 @@ jobs:
             echo "DEV_KEYSTORE=$RUNNER_TEMP/dev.p12" >> "$GITHUB_ENV"
           fi
 
+      - name: Ključ za release AAB (upload key za Play)
+        env:
+          UPLOAD_KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_B64" ]; then
+            echo "$UPLOAD_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.p12"
+            echo "UPLOAD_KEYSTORE=$RUNNER_TEMP/upload.p12" >> "$GITHUB_ENV"
+          fi
+
       - name: Build debug APK
         env:
           DEV_KEYSTORE_PASSWORD: ${{ secrets.DEV_KEYSTORE_PASSWORD }}
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Otisak potpisa
+      - name: Build release AAB (za Play Store)
+        env:
+          UPLOAD_STORE_PASSWORD: ${{ secrets.UPLOAD_STORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: Imenuj APK i AAB po verziji
         run: |
-          "$(ls -d $ANDROID_SDK_ROOT/build-tools/* | tail -1)/apksigner" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | grep -i "SHA-256"
+          mv app/build/outputs/apk/debug/app-debug.apk \
+             "app/build/outputs/apk/debug/MojTijek-Android-1.0.0-b${GITHUB_RUN_NUMBER}.apk"
+          mv app/build/outputs/bundle/release/app-release.aab \
+             "app/build/outputs/bundle/release/MojTijek-Android-1.0.0-b${GITHUB_RUN_NUMBER}.aab"
 
-      - name: Imenuj APK po verziji
-        run: mv app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/MojTijek-Android-1.0.0-b${GITHUB_RUN_NUMBER}.apk"
+      - name: Provjeri potpis APK-a
+        run: |
+          "$(ls -d $ANDROID_SDK_ROOT/build-tools/* | tail -1)/apksigner" verify \
+            --print-certs \
+            "app/build/outputs/apk/debug/MojTijek-Android-1.0.0-b${GITHUB_RUN_NUMBER}.apk" \
+            | grep -i "SHA-256"
 
-      - name: Upload APK as artifact
+      - name: Upload debug APK (za testiranje)
         uses: actions/upload-artifact@v4
         with:
           name: mojtijek-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          retention-days: 7
+          path: app/build/outputs/apk/debug/MojTijek-Android-1.0.0-b*.apk
+          retention-days: 14
 
-      - name: Create GitHub Release
+      - name: Upload release AAB (za Play Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mojtijek-release-aab
+          path: app/build/outputs/bundle/release/MojTijek-Android-1.0.0-b*.aab
+          retention-days: 30
+
+      - name: Create GitHub Release (samo za main)
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           set -e
           APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+          AAB=$(find app/build/outputs/bundle/release -name "*.aab" | head -1)
           TAG="android-$(date +%Y%m%d)"
-          NOTES="Android APK build from ${{ github.sha }}"
+          NOTES="Android build ${GITHUB_RUN_NUMBER} from ${{ github.sha }}"
           if ! gh release view "$TAG" --repo ${{ github.repository }} 2>/dev/null; then
-            gh release create "$TAG" --title "Android Build $(date +'%Y-%m-%d')" --notes "$NOTES" --repo ${{ github.repository }}
+            gh release create "$TAG" \
+              --title "Android Build $(date +'%Y-%m-%d')" \
+              --notes "$NOTES" \
+              --repo ${{ github.repository }}
           fi
-          gh release upload "$TAG" "$APK" --repo ${{ github.repository }} --clobber
+          gh release upload "$TAG" "$APK" "$AAB" \
+            --repo ${{ github.repository }} --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
